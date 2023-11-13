@@ -1,22 +1,14 @@
 package me.xginko.snowballfight.modules.effects;
 
-import me.xginko.pumpkinpvpreloaded.PumpkinPVPConfig;
-import me.xginko.pumpkinpvpreloaded.PumpkinPVPReloaded;
-import me.xginko.pumpkinpvpreloaded.events.PostPumpkinExplodeEvent;
-import me.xginko.pumpkinpvpreloaded.events.PostPumpkinHeadEntityExplodeEvent;
-import me.xginko.pumpkinpvpreloaded.modules.PumpkinPVPModule;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.modules.SnowballModule;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
-import org.bukkit.Location;
-import org.bukkit.entity.Firework;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.meta.FireworkMeta;
 
 import java.util.*;
 
@@ -30,11 +22,25 @@ public class FireworkEffects implements SnowballModule, Listener {
         SnowballConfig config = SnowballFight.getConfiguration();
         List<Color> parsedColors = new ArrayList<>();
         List<String> configuredColors = config.getList("firework-effects.colors", List.of(
-                "FFAE03",   // Pumpkin Light Orange
-                "FE4E00",   // Pumpkin Dark Orange
-                "1A090D",   // Witch Hat Dark Purple
-                "A42CD6",   // Witch Dress Pale Purple
-                "A3EB1E"    // Slime Green
+                "B3E3F4",   // Snowy Dark Sky
+                "EEB64B",   // Yellow
+                "B5E5E7",   // Early Winter Snow White slightly Blue
+                "FC9460",   // Orange
+                "71C3DB",   // Wet Snow Blue White
+                "E54264",   // Red
+                "9BDBFF",   // Mid Winter White slightly more Blue
+                "A92F5F",   // Dark Red
+                "E8EBF0",   // Frost on thin twigs White
+                "442261",   // Purple
+                "F198AF",   // Evening cloud Pinkred
+                "283D5E",   // Dark Blue
+                "FEDBB3",   // Sun slightly red on snow reflection
+                "327F51",   // Green
+                "59B1BD",   // Mid day snow shadow blue
+                "64A47F",   // Light Green
+                "60798D",   // Evening slightly red sun snow shadow
+                "C3C48A",   // Light Yellow-Green
+                "407794"    // Evening slightly red sun snow shadow but more blue
         ), "You need to configure at least 2 colors.");
         if (configuredColors.size() < 2) {
             SnowballFight.getLog().severe("You need to configure at least 2 colors. Disabling firework effects.");
@@ -52,7 +58,7 @@ public class FireworkEffects implements SnowballModule, Listener {
         final boolean flicker = config.getBoolean("firework-effects.flicker", false);
         final boolean trail = config.getBoolean("firework-effects.trail", false);
         config.getList("firework-effects.types",
-                Arrays.stream(FireworkEffect.Type.values()).map(Enum::name).toList(),
+                List.of(FireworkEffect.Type.BALL.name(), FireworkEffect.Type.STAR.name()),
                 """
                         FireworkEffect Types you wish to use. Has to be a valid enum from:
                         https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html
