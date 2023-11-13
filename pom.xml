@@ -44,7 +44,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>com.github.benmanes.caffeine</pattern>
-                                    <shadedPattern>me.xginko.pumpkinpvpreloaded.caffeine</shadedPattern>
+                                    <shadedPattern>me.xginko.snowballfight.caffeine</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
