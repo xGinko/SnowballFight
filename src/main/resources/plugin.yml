@@ -1,0 +1,5 @@
+name: SnowballFight
+version: '${project.version}'
+main: me.xginko.snowballfight.SnowballFight
+api-version: '1.20'
+load: STARTUP
