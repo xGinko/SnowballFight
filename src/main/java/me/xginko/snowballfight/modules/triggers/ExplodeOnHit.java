@@ -1,6 +1,7 @@
 package me.xginko.snowballfight.modules.triggers;
 
-import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
+import com.tcoded.folialib.FoliaLib;
+import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
@@ -21,14 +22,14 @@ import java.util.List;
 
 public class ExplodeOnHit implements SnowballModule, Listener {
 
-    private final SnowballFight plugin;
-    private final RegionScheduler regionScheduler;
+    private final ServerImplementation scheduler;
     private final HashSet<EntityType> typesThatExplode = new HashSet<>();
-    private final boolean onlyForEntities, onlyForSpecificEntities, asBlacklist;
+    private final boolean onlyForEntities, onlyForSpecificEntities, asBlacklist, isFolia;
 
     public ExplodeOnHit() {
-        this.plugin = SnowballFight.getInstance();
-        this.regionScheduler = plugin.getServer().getRegionScheduler();
+        FoliaLib foliaLib = SnowballFight.getFoliaLib();
+        this.isFolia = foliaLib.isFolia();
+        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
         this.onlyForEntities = config.getBoolean("explosion-triggers.on-snowball-hit.only-for-entities", true);
         this.onlyForSpecificEntities = config.getBoolean("explosion-triggers.on-snowball-hit.only-for-specific-entities", false);
@@ -65,7 +66,8 @@ public class ExplodeOnHit implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     private void onProjectileHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        Entity hitEntity = event.getHitEntity();
+
+        final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {
             if (hitEntity == null) return;
             if (onlyForSpecificEntities && (asBlacklist == typesThatExplode.contains(event.getHitEntity().getType()))) return;
@@ -78,31 +80,28 @@ public class ExplodeOnHit implements SnowballModule, Listener {
         );
 
         if (!preSnowballExplodeEvent.callEvent()) return;
-        final Entity hit = preSnowballExplodeEvent.getHitEntity();
 
-        if (hit != null) {
-            hit.getScheduler().run(plugin, snobol -> {
-                new PostSnowballExplodeEvent(
-                        preSnowballExplodeEvent.getSnowball(),
-                        hit,
-                        preSnowballExplodeEvent.getExplodeLocation(),
-                        preSnowballExplodeEvent.getExplosionPower(),
-                        preSnowballExplodeEvent.willSetFire(),
-                        preSnowballExplodeEvent.willBreakBlocks()
-                ).callEvent();
-            }, null);
-        } else {
+        if (isFolia) {
             final Location explodeLoc = preSnowballExplodeEvent.getExplodeLocation();
-            regionScheduler.run(plugin, explodeLoc, snobol -> {
+            scheduler.runAtLocation(explodeLoc, snobol -> {
                 new PostSnowballExplodeEvent(
                         preSnowballExplodeEvent.getSnowball(),
-                        null,
+                        preSnowballExplodeEvent.getHitEntity(),
                         explodeLoc,
                         preSnowballExplodeEvent.getExplosionPower(),
                         preSnowballExplodeEvent.willSetFire(),
                         preSnowballExplodeEvent.willBreakBlocks()
                 ).callEvent();
             });
+        } else {
+            new PostSnowballExplodeEvent(
+                    preSnowballExplodeEvent.getSnowball(),
+                    preSnowballExplodeEvent.getHitEntity(),
+                    preSnowballExplodeEvent.getExplodeLocation(),
+                    preSnowballExplodeEvent.getExplosionPower(),
+                    preSnowballExplodeEvent.willSetFire(),
+                    preSnowballExplodeEvent.willBreakBlocks()
+            ).callEvent();
         }
     }
 }

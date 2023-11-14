@@ -1,8 +1,8 @@
 package me.xginko.snowballfight;
 
+import com.tcoded.folialib.FoliaLib;
 import me.xginko.snowballfight.commands.snowballs.SnowballsCommand;
 import me.xginko.snowballfight.modules.SnowballModule;
-import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger;
@@ -35,8 +35,8 @@ public final class SnowballFight extends JavaPlugin {
     public static SnowballFight getInstance() {
         return instance;
     }
-    public static NamespacedKey getKey(String key) {
-        return new NamespacedKey(instance, key);
+    public static FoliaLib getFoliaLib() {
+        return new FoliaLib(instance);
     }
     public static SnowballConfig getConfiguration() {
         return config;

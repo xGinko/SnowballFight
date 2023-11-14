@@ -1,10 +1,7 @@
 package me.xginko.snowballfight.modules.effects;
 
-import me.xginko.pumpkinpvpreloaded.PumpkinPVPConfig;
-import me.xginko.pumpkinpvpreloaded.PumpkinPVPReloaded;
-import me.xginko.pumpkinpvpreloaded.events.PostPumpkinExplodeEvent;
-import me.xginko.pumpkinpvpreloaded.events.PostPumpkinHeadEntityExplodeEvent;
-import me.xginko.pumpkinpvpreloaded.modules.PumpkinPVPModule;
+import com.tcoded.folialib.FoliaLib;
+import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.modules.SnowballModule;
@@ -22,16 +19,18 @@ import java.util.UUID;
 
 public class LightningEffects implements SnowballModule, Listener {
 
-    private final SnowballFight plugin;
-    private final boolean deal_damage;
+    private final ServerImplementation scheduler;
+    private final boolean isFolia, deal_damage;
     private final int spawn_amount, flashcount;
     private final double probability;
 
     public LightningEffects() {
         shouldEnable();
-        this.plugin = SnowballFight.getInstance();
+        FoliaLib foliaLib = SnowballFight.getFoliaLib();
+        this.isFolia = foliaLib.isFolia();
+        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
-        config.addComment("lightning-effects", "Will strike the closest player with lightning.");
+        config.master().addComment("lightning-effects", "Will strike the closest player with lightning.");
         this.deal_damage = config.getBoolean("lightning-effects.deal-damage", true);
         this.spawn_amount = config.getInt("lightning-effects.lightning-strikes", 2, "Amount of times to strike.");
         this.flashcount = config.getInt("lightning-effects.lightning-flash-count", 2, "Amount of times to flash after strike.");
@@ -45,6 +44,7 @@ public class LightningEffects implements SnowballModule, Listener {
 
     @Override
     public void enable() {
+        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -73,13 +73,19 @@ public class LightningEffects implements SnowballModule, Listener {
         }
 
         if (closestPlayer == null) return;
-
         final Location playerLoc = closestPlayer.getLocation();
         final World world = playerLoc.getWorld();
-        closestPlayer.getScheduler().run(plugin, strike -> {
+
+        if (isFolia) {
+            scheduler.runAtEntity(closestPlayer, strike -> {
+                for (int i = 0; i < spawn_amount; i++) {
+                    (deal_damage ? world.strikeLightning(playerLoc) : world.strikeLightningEffect(playerLoc)).setFlashCount(flashcount);
+                }
+            });
+        } else {
             for (int i = 0; i < spawn_amount; i++) {
                 (deal_damage ? world.strikeLightning(playerLoc) : world.strikeLightningEffect(playerLoc)).setFlashCount(flashcount);
             }
-        }, null);
+        }
     }
 }
