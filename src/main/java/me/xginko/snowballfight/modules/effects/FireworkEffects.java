@@ -20,7 +20,6 @@ public class FireworkEffects implements SnowballModule, Listener {
     public FireworkEffects() {
         shouldEnable();
         SnowballConfig config = SnowballFight.getConfiguration();
-        List<Color> parsedColors = new ArrayList<>();
         List<String> configuredColors = config.getList("firework-effects.colors", List.of(
                 "B3E3F4",   // Snowy Dark Sky
                 "EEB64B",   // Yellow
@@ -46,13 +45,14 @@ public class FireworkEffects implements SnowballModule, Listener {
             SnowballFight.getLog().severe("You need to configure at least 2 colors. Disabling firework effects.");
             has_enough_colors = false;
         }
+        List<Color> parsedColors = new ArrayList<>();
         configuredColors.forEach(hexString -> {
             try {
                 int rgb = HexFormat.fromHexDigits(hexString);
                 parsedColors.add(Color.fromRGB(rgb));
             } catch (IllegalArgumentException e) {
                 SnowballFight.getLog().warning("Hex color string '"+hexString+"' is not formatted correctly. " +
-                        "Try using the format without a prefix: eg. FFAE03 instead of #FFAE03 or 0xFFAE03");
+                        "Try using the format without a prefix: eg. E8EBF0 instead of #E8EBF0 or 0xE8EBF0");
             }
         });
         final boolean flicker = config.getBoolean("firework-effects.flicker", false);
