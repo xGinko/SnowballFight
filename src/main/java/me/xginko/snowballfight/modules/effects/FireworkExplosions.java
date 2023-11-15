@@ -2,15 +2,19 @@ package me.xginko.snowballfight.modules.effects;
 
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
+import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
 import me.xginko.snowballfight.modules.SnowballModule;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
+import org.bukkit.Location;
+import org.bukkit.entity.Firework;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.meta.FireworkMeta;
 
 import java.util.*;
 
@@ -91,8 +95,7 @@ public class FireworkExplosions implements SnowballModule, Listener {
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("firework-effects.enable", true)
-                && has_enough_colors;
+        return SnowballFight.getConfiguration().getBoolean("firework-effects.enable", true) && has_enough_colors;
     }
 
     @Override
@@ -107,7 +110,15 @@ public class FireworkExplosions implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    private void onEvent() {
-
+    private void onPostSnowballExplode(PostSnowballExplodeEvent event) {
+        if (event.hasExploded()) {
+            final Location explosionLoc = event.getExplodeLocation();
+            Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
+            FireworkMeta meta = firework.getFireworkMeta();
+            meta.clearEffects();
+            meta.addEffect(this.fireWorkEffects.get(new Random().nextInt(this.fireWorkEffects.size() + 1) - 1));
+            firework.setFireworkMeta(meta);
+            firework.detonate();
+        }
     }
 }

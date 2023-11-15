@@ -25,8 +25,10 @@ public class PreSnowballExplodeEvent extends Event implements Cancellable {
     public PreSnowballExplodeEvent(
             @NotNull Snowball snowball,
             @Nullable Entity hitEntity,
-            @NotNull Location explodeLocation
+            @NotNull Location explodeLocation,
+            final boolean isAsync
     ) {
+        super(isAsync);
         this.isCancelled = false;
         this.snowball = snowball;
         this.hitEntity = hitEntity;

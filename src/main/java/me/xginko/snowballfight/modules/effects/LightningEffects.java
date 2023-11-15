@@ -7,15 +7,16 @@ import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.modules.SnowballModule;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.event.entity.ProjectileHitEvent;
 
 import java.util.Random;
-import java.util.UUID;
 
 public class LightningEffects implements SnowballModule, Listener {
 
@@ -54,38 +55,29 @@ public class LightningEffects implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.LOW)
-    private void onEvent() {
-        if ((probability >= 1 || new Random().nextDouble() <= probability)) {
-            strikeLightning();
+    private void onProjectileHit(ProjectileHitEvent event) {
+        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        if (probability < 1.0 && new Random().nextDouble() > probability) return;
+
+        final Entity hitEntity = event.getHitEntity();
+        if (hitEntity != null) {
+            if (isFolia) scheduler.runAtEntity(hitEntity, strike -> strikeLightning(hitEntity.getLocation()));
+            else strikeLightning(hitEntity.getLocation());
+            return;
+        }
+
+        final Block hitBlock = event.getHitBlock();
+        if (hitBlock != null) {
+            final Location strikeLoc = hitBlock.getLocation();
+            if (isFolia) scheduler.runAtLocation(strikeLoc, strike -> strikeLightning(strikeLoc));
+            else strikeLightning(strikeLoc);
         }
     }
 
-    private void strikeLightning(@Nullable final UUID exploder, final Location explosionLoc) {
-        Player closestPlayer = null;
-        double distance = 100;
-        for (Player player : explosionLoc.getNearbyPlayers(6, 6, 6)) {
-            if (exploder != null && player.getUniqueId().equals(exploder)) continue;
-            double currentDistance = explosionLoc.distance(player.getLocation());
-            if (currentDistance < distance) {
-                closestPlayer = player;
-                distance = currentDistance;
-            }
-        }
-
-        if (closestPlayer == null) return;
-        final Location playerLoc = closestPlayer.getLocation();
-        final World world = playerLoc.getWorld();
-
-        if (isFolia) {
-            scheduler.runAtEntity(closestPlayer, strike -> {
-                for (int i = 0; i < spawn_amount; i++) {
-                    (deal_damage ? world.strikeLightning(playerLoc) : world.strikeLightningEffect(playerLoc)).setFlashCount(flashcount);
-                }
-            });
-        } else {
-            for (int i = 0; i < spawn_amount; i++) {
-                (deal_damage ? world.strikeLightning(playerLoc) : world.strikeLightningEffect(playerLoc)).setFlashCount(flashcount);
-            }
+    private void strikeLightning(final Location strikeLoc) {
+        final World world = strikeLoc.getWorld();
+        for (int i = 0; i < spawn_amount; i++) {
+            (deal_damage ? world.strikeLightning(strikeLoc) : world.strikeLightningEffect(strikeLoc)).setFlashCount(flashcount);
         }
     }
 }

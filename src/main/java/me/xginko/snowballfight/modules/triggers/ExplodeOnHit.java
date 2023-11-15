@@ -27,6 +27,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
     private final boolean onlyForEntities, onlyForSpecificEntities, asBlacklist, isFolia;
 
     public ExplodeOnHit() {
+        shouldEnable();
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
@@ -76,7 +77,8 @@ public class ExplodeOnHit implements SnowballModule, Listener {
         PreSnowballExplodeEvent preSnowballExplodeEvent = new PreSnowballExplodeEvent(
                 (Snowball) event.getEntity(),
                 hitEntity,
-                event.getHitBlock() != null ? event.getHitBlock().getLocation().toCenterLocation() : event.getEntity().getLocation()
+                event.getHitBlock() != null ? event.getHitBlock().getLocation().toCenterLocation() : event.getEntity().getLocation(),
+                event.isAsynchronous()
         );
 
         if (!preSnowballExplodeEvent.callEvent()) return;
@@ -90,7 +92,8 @@ public class ExplodeOnHit implements SnowballModule, Listener {
                         explodeLoc,
                         preSnowballExplodeEvent.getExplosionPower(),
                         preSnowballExplodeEvent.willSetFire(),
-                        preSnowballExplodeEvent.willBreakBlocks()
+                        preSnowballExplodeEvent.willBreakBlocks(),
+                        event.isAsynchronous()
                 ).callEvent();
             });
         } else {
@@ -100,7 +103,8 @@ public class ExplodeOnHit implements SnowballModule, Listener {
                     preSnowballExplodeEvent.getExplodeLocation(),
                     preSnowballExplodeEvent.getExplosionPower(),
                     preSnowballExplodeEvent.willSetFire(),
-                    preSnowballExplodeEvent.willBreakBlocks()
+                    preSnowballExplodeEvent.willBreakBlocks(),
+                    event.isAsynchronous()
             ).callEvent();
         }
     }

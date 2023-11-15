@@ -4,11 +4,12 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Snowball;
+import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PostSnowballExplodeEvent extends org.bukkit.event.Event {
+public class PostSnowballExplodeEvent extends Event {
 
     private static final @NotNull HandlerList handlers = new HandlerList();
 
@@ -19,13 +20,15 @@ public class PostSnowballExplodeEvent extends org.bukkit.event.Event {
     private final boolean setFire, breakBlocks, hasExploded;
 
     public PostSnowballExplodeEvent(
-            @NotNull Snowball snowball,
-            @Nullable Entity hitEntity,
-            @NotNull Location explodeLocation,
-            float explosionPower,
-            boolean setFire,
-            boolean breakBlocks
+            final @NotNull Snowball snowball,
+            final @Nullable Entity hitEntity,
+            final @NotNull Location explodeLocation,
+            final float explosionPower,
+            final boolean setFire,
+            final boolean breakBlocks,
+            final boolean isAsync
     ) {
+        super(isAsync);
         this.snowball = snowball;
         this.hitEntity = hitEntity;
         this.explodeLocation = explodeLocation;
@@ -33,7 +36,7 @@ public class PostSnowballExplodeEvent extends org.bukkit.event.Event {
         this.setFire = setFire;
         this.breakBlocks = breakBlocks;
         this.hasExploded = explodeLocation.getWorld().createExplosion(
-                snowball.getShooter() instanceof LivingEntity entity ? entity : snowball, // Set explode source for tracking
+                snowball.getShooter() instanceof LivingEntity livingThrower ? livingThrower : snowball, // Set explode source for tracking
                 explodeLocation,
                 explosionPower,
                 setFire,
