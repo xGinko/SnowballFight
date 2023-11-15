@@ -1,5 +1,25 @@
 name: SnowballFight
 version: '${project.version}'
 main: me.xginko.snowballfight.SnowballFight
-api-version: '1.20'
+api-version: '1.16'
 load: STARTUP
+authors: [xGinko]
+description: ${project.description}
+website: ${project.url}
+folia-supported: true
+
+commands:
+  snowballs:
+    usage: /snowballs [ reload, version, disable ]
+    description: admin commands
+    aliases:
+      - ppvp
+      - pump
+
+permissions:
+  snowballs.cmd.disable:
+    description: Disable the plugin
+  snowballs.cmd.reload:
+    description: Reload the plugin configuration
+  snowballs.cmd.version:
+    description: Show the plugin version
