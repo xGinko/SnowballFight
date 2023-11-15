@@ -28,9 +28,8 @@ public class ReloadSubCmd extends SubCommand {
     public void perform(CommandSender sender, String[] args) {
         if (!sender.hasPermission("snowballfight.cmd.reload")) return;
         sender.sendMessage(Component.text("Reloading SnowballFight...").color(NamedTextColor.WHITE));
-        SnowballFight plugin = SnowballFight.getInstance();
-        plugin.getServer().getAsyncScheduler().runNow(plugin, reload -> {
-            plugin.reloadConfiguration();
+        SnowballFight.getFoliaLib().getImpl().runAsync(reload -> {
+            SnowballFight.getInstance().reloadConfiguration();
             sender.sendMessage(Component.text("Reload complete.").color(NamedTextColor.GREEN));
         });
     }
