@@ -28,6 +28,7 @@ public final class SnowballFight extends JavaPlugin {
             config.saveConfig();
         } catch (Exception e) {
             logger.severe("Error loading config! - " + e.getLocalizedMessage());
+            e.printStackTrace();
         }
     }
 

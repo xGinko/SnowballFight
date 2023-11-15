@@ -12,9 +12,6 @@ commands:
   snowballs:
     usage: /snowballs [ reload, version, disable ]
     description: admin commands
-    aliases:
-      - ppvp
-      - pump
 
 permissions:
   snowballs.cmd.disable:

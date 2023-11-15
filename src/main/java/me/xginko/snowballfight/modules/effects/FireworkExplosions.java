@@ -76,7 +76,7 @@ public class FireworkExplosions implements SnowballModule, Listener {
                     int tries = 0;
                     while (secondary_color.equals(primary_color)) { // Avoid rolling the same color
                         if (tries > 100) break; // Avoid infinite loop on bad config
-                        secondary_color = parsedColors.get(new Random().nextInt(parsedColors.size() + 1) - 1);
+                        secondary_color = parsedColors.get(new Random().nextInt(parsedColors.size()));
                         tries++;
                     }
                     this.fireWorkEffects.add(FireworkEffect.builder()
@@ -116,7 +116,7 @@ public class FireworkExplosions implements SnowballModule, Listener {
             Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
             FireworkMeta meta = firework.getFireworkMeta();
             meta.clearEffects();
-            meta.addEffect(this.fireWorkEffects.get(new Random().nextInt(this.fireWorkEffects.size() + 1) - 1));
+            meta.addEffect(this.fireWorkEffects.get(new Random().nextInt(this.fireWorkEffects.size())));
             firework.setFireworkMeta(meta);
             firework.detonate();
         }
