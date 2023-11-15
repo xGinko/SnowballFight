@@ -61,16 +61,16 @@ public class LightningEffects implements SnowballModule, Listener {
 
         final Entity hitEntity = event.getHitEntity();
         if (hitEntity != null) {
-            if (isFolia) scheduler.runAtEntity(hitEntity, strike -> strikeLightning(hitEntity.getLocation()));
-            else strikeLightning(hitEntity.getLocation());
+            if (isFolia) scheduler.runAtEntity(hitEntity, strike -> this.strikeLightning(hitEntity.getLocation()));
+            else this.strikeLightning(hitEntity.getLocation());
             return;
         }
 
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
-            final Location strikeLoc = hitBlock.getLocation();
-            if (isFolia) scheduler.runAtLocation(strikeLoc, strike -> strikeLightning(strikeLoc));
-            else strikeLightning(strikeLoc);
+            final Location hitBlockLoc = hitBlock.getLocation();
+            if (isFolia) scheduler.runAtLocation(hitBlockLoc, strike -> this.strikeLightning(hitBlockLoc));
+            else this.strikeLightning(hitBlockLoc);
         }
     }
 
