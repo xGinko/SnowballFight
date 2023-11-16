@@ -36,7 +36,7 @@ public class PostSnowballExplodeEvent extends Event {
         this.setFire = setFire;
         this.breakBlocks = breakBlocks;
         this.hasExploded = explodeLocation.getWorld().createExplosion(
-                snowball.getShooter() instanceof LivingEntity livingThrower ? livingThrower : snowball, // Set explode source for tracking
+                snowball.getShooter() instanceof LivingEntity living ? living : snowball, // Set explode source for tracking
                 explodeLocation,
                 explosionPower,
                 setFire,
@@ -66,11 +66,13 @@ public class PostSnowballExplodeEvent extends Event {
         return hasExploded;
     }
 
+    @NotNull
     @Override
-    public @NotNull HandlerList getHandlers() {
+    public HandlerList getHandlers() {
         return handlers;
     }
-    public static @NotNull HandlerList getHandlerList() {
+    @NotNull
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

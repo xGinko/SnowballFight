@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 public final class SnowballFight extends JavaPlugin {
 
     private static SnowballFight instance;
+    private static SnowballCache cache;
     private static SnowballConfig config;
     private static Logger logger;
 
@@ -24,6 +25,7 @@ public final class SnowballFight extends JavaPlugin {
     public void reloadConfiguration() {
         try {
             config = new SnowballConfig();
+            cache = new SnowballCache(config.cacheKeepSeconds);
             SnowballModule.reloadModules();
             config.saveConfig();
         } catch (Exception e) {
@@ -34,6 +36,9 @@ public final class SnowballFight extends JavaPlugin {
 
     public static SnowballFight getInstance() {
         return instance;
+    }
+    public static SnowballCache getCache() {
+        return cache;
     }
     public static FoliaLib getFoliaLib() {
         return new FoliaLib(instance);

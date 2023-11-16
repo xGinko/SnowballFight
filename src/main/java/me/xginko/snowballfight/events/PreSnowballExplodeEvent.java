@@ -1,7 +1,5 @@
 package me.xginko.snowballfight.events;
 
-import me.xginko.snowballfight.SnowballConfig;
-import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Snowball;
@@ -26,6 +24,9 @@ public class PreSnowballExplodeEvent extends Event implements Cancellable {
             @NotNull Snowball snowball,
             @Nullable Entity hitEntity,
             @NotNull Location explodeLocation,
+            float explosionPower,
+            boolean explosionSetFire,
+            boolean explosionBreakBlocks,
             final boolean isAsync
     ) {
         super(isAsync);
@@ -33,10 +34,9 @@ public class PreSnowballExplodeEvent extends Event implements Cancellable {
         this.snowball = snowball;
         this.hitEntity = hitEntity;
         this.explodeLocation = explodeLocation;
-        SnowballConfig config = SnowballFight.getConfiguration();
-        this.explosionPower = config.explosionPower;
-        this.setFire = config.explosionSetFire;
-        this.breakBlocks = config.explosionBreakBlocks;
+        this.explosionPower = explosionPower;
+        this.setFire = explosionSetFire;
+        this.breakBlocks = explosionBreakBlocks;
     }
 
     public @NotNull Snowball getSnowball() {
@@ -84,11 +84,13 @@ public class PreSnowballExplodeEvent extends Event implements Cancellable {
     public boolean isCancelled() {
         return isCancelled;
     }
+    @NotNull
     @Override
-    public @NotNull HandlerList getHandlers() {
+    public HandlerList getHandlers() {
         return handlers;
     }
-    public static @NotNull HandlerList getHandlerList() {
+    @NotNull
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 }
