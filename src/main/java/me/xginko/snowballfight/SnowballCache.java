@@ -15,28 +15,28 @@ import java.util.concurrent.ConcurrentMap;
 
 public final class SnowballCache {
 
-    private final @NotNull Cache<UUID, WrappedSnowball> villagerCache;
+    private final @NotNull Cache<UUID, WrappedSnowball> cache;
 
     SnowballCache(long expireAfterWriteSeconds) {
-        this.villagerCache = Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(expireAfterWriteSeconds)).build();
+        this.cache = Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(expireAfterWriteSeconds)).build();
     }
 
     public @NotNull ConcurrentMap<UUID, WrappedSnowball> cacheMap() {
-        return this.villagerCache.asMap();
+        return this.cache.asMap();
     }
 
     public @Nullable WrappedSnowball get(@NotNull UUID uuid) {
-        WrappedSnowball wrappedSnowball = this.villagerCache.getIfPresent(uuid);
+        WrappedSnowball wrappedSnowball = this.cache.getIfPresent(uuid);
         return wrappedSnowball == null && Bukkit.getEntity(uuid) instanceof Snowball snowball ? add(snowball) : wrappedSnowball;
     }
 
     public @NotNull WrappedSnowball getOrAdd(@NotNull Snowball snowball) {
-        WrappedSnowball WrappedSnowball = this.villagerCache.getIfPresent(snowball.getUniqueId());
+        WrappedSnowball WrappedSnowball = this.cache.getIfPresent(snowball.getUniqueId());
         return WrappedSnowball == null ? add(new WrappedSnowball(snowball)) : add(WrappedSnowball);
     }
 
     public @NotNull WrappedSnowball add(@NotNull WrappedSnowball snowball) {
-        this.villagerCache.put(snowball.snowball().getUniqueId(), snowball);
+        this.cache.put(snowball.snowball().getUniqueId(), snowball);
         return snowball;
     }
 
@@ -45,14 +45,14 @@ public final class SnowballCache {
     }
 
     public boolean contains(@NotNull UUID uuid) {
-        return this.villagerCache.getIfPresent(uuid) != null;
+        return this.cache.getIfPresent(uuid) != null;
     }
 
     public boolean contains(@NotNull WrappedSnowball snowball) {
-        return this.villagerCache.getIfPresent(snowball.snowball().getUniqueId()) != null;
+        return this.cache.getIfPresent(snowball.snowball().getUniqueId()) != null;
     }
 
     public boolean contains(@NotNull Villager villager) {
-        return this.villagerCache.getIfPresent(villager.getUniqueId()) != null;
+        return this.cache.getIfPresent(villager.getUniqueId()) != null;
     }
 }

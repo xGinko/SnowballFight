@@ -21,27 +21,27 @@ public class SnowballConfig {
         this.config = loadConfig(new File(SnowballFight.getInstance().getDataFolder(), "config.yml"));
         this.cacheKeepSeconds = getInt("settings.cache-keep-seconds", 20, "Don't touch unless you know what you're doing.");
         final MiniMessage miniMessage = MiniMessage.miniMessage();
-        List<String> defaults = List.of(
+        final List<String> defaults = List.of(
                 "<color:#B3E3F4>",   // Snowy Dark Sky
                 "<color:#B5E5E7>",   // Early Winter Snow White slightly Blue
                 "<color:#71C3DB>",   // Wet Snow Blue White
                 "<color:#9BDBFF>",   // Mid Winter White slightly more Blue
                 "<color:#E8EBF0>",   // Frost on thin twigs White
-                "<color:#FEDBB3>",   // Sun slightly red on snow reflection
                 "<color:#59B1BD>",   // Mid day snow shadow blue
-                "<color:#60798D>",   // Evening slightly red sun snow shadow
                 "<color:#407794>"    // Evening slightly red sun snow shadow but more blue
         );
         List<String> configuredColors = getList("settings.colors", defaults, "You need to configure at least 2 colors.");
+        if (configuredColors.size() < 2) {
+            SnowballFight.getLog().severe("You need to configure at least 2 colors. Resetting to default colors.");
+            config.set("settings.colors", defaults);
+            configuredColors = defaults; // Simple workaround as the new config list needs to be updated again after config.set to not stay invalid.
+        }
         configuredColors.forEach(serializedColor -> {
             final TextColor textColor = miniMessage.deserialize(serializedColor).color();
             if (textColor != null) this.colors.add(Color.fromRGB(textColor.red(), textColor.green(), textColor.blue()));
             else SnowballFight.getLog().warning("Color '" + serializedColor + "' is not formatted properly. Use the following format: <color:#E54264>");
         });
-        if (configuredColors.size() < 2) {
-            SnowballFight.getLog().severe("You need to configure at least 2 colors. Resetting to default colors.");
-            config.set("settings.colors", defaults);
-        }
+        structure();
     }
 
     private ConfigFile loadConfig(File ymlFile) throws Exception {
@@ -49,6 +49,19 @@ public class SnowballConfig {
         if (!parent.exists() && !parent.mkdir()) SnowballFight.getLog().severe("Unable to create plugin config directory.");
         if (!ymlFile.exists()) ymlFile.createNewFile();
         return ConfigFile.loadConfig(ymlFile);
+    }
+
+    public void structure() {
+        config.addDefault("settings.explosions", null);
+        config.addSection("settings.explosions", "explosions");
+        config.addDefault("settings.fireworks", null);
+        config.addSection("settings.fireworks", "fireworks");
+        config.addDefault("settings.trails", null);
+        config.addSection("settings.trails", "trails");
+        config.addDefault("settings.lightning", null);
+        config.addSection("settings.lightning", "lightning");
+        config.addDefault("settings.levitation", null);
+        config.addSection("settings.levitation", "levitation");
     }
 
     public void saveConfig() {

@@ -23,17 +23,21 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     private final ServerImplementation scheduler;
     private final HashMap<UUID, WrappedTask> particleTrails = new HashMap<>();
     private final int particlesPerTick;
+    private final long maxTrailTaskAliveTime;
 
-    public TrailsWhenThrown() {
+    protected TrailsWhenThrown() {
         shouldEnable();
         this.scheduler = SnowballFight.getFoliaLib().getImpl();
         SnowballConfig config = SnowballFight.getConfiguration();
-        this.particlesPerTick = config.getInt("settings.trajectory-trails.particles-per-tick", 10);
+        this.particlesPerTick = config.getInt("settings.trails.particles-per-tick", 10,
+                "How many particles to spawn per tick. Recommended to leave low.");
+        this.maxTrailTaskAliveTime = config.getInt("settings.trails.max-trail-task-alive-time-seconds", 30,
+                "How many seconds until the trails will no longer be generated on the same snowball to save resources.") * 1000L;
     }
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.trajectory-trails.enable", true);
+        return SnowballFight.getConfiguration().getBoolean("settings.trails.enable", true);
     }
 
     @Override
@@ -60,6 +64,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
                 .count(particlesPerTick);
 
         final UUID snowballUUID = snowball.getUniqueId();
+        final long stopTimeMillis = System.currentTimeMillis() + maxTrailTaskAliveTime;
 
         this.particleTrails.put(
                 snowballUUID,
@@ -67,12 +72,13 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
                     final Location snowballLoc = snowball.getLocation();
                     primary.location(snowballLoc).spawn();
                     secondary.location(snowballLoc).spawn();
-                    if (snowball.isDead()) { // End the things we begin.
+                    if (snowball.isDead() || System.currentTimeMillis() > stopTimeMillis) {
+                        // Stop the task because by itself it will loop until server restart.
                         WrappedTask trails = particleTrails.get(snowballUUID);
                         if (trails != null) trails.cancel();
                         particleTrails.remove(snowballUUID);
                     }
-                }, 2L, 1L)
+                }, 1L, 1L)
         );
     }
 }

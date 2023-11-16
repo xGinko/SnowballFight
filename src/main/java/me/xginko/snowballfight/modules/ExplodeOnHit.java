@@ -19,20 +19,20 @@ import org.bukkit.event.Listener;
 import java.util.HashSet;
 import java.util.List;
 
-public class ExplosionOnHit implements SnowballModule, Listener {
+public class ExplodeOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
     private final float explosionPower;
     private final boolean explosionSetFire, explosionBreakBlocks, onlyForEntities, onlyForSpecificEntities, asBlacklist, isFolia;
 
-    public ExplosionOnHit() {
+    protected ExplodeOnHit() {
         shouldEnable();
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
-        this.explosionPower = config.getFloat("settings.explosions.power", 6.0F,
+        this.explosionPower = config.getFloat("settings.explosions.power", 2.0F,
                 "TNT has a power of 4.0.");
         this.explosionSetFire = config.getBoolean("settings.explosions.set-fire", false,
                 "Enable explosion fire like with respawn anchors.");

@@ -19,9 +19,9 @@ public interface SnowballModule {
 
         modules.add(new ProjectileListener());
 
-        modules.add(new ExplosionOnHit());
+        modules.add(new ExplodeOnHit());
         modules.add(new FireworkOnHit());
-        modules.add(new LightningStrikeOnHit());
+        modules.add(new LightningOnHit());
         modules.add(new TrailsWhenThrown());
         modules.add(new LevitateOnHit());
 

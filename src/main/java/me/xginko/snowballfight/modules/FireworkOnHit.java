@@ -2,7 +2,6 @@ package me.xginko.snowballfight.modules;
 
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.ServerImplementation;
-import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.SnowballHitEvent;
@@ -10,6 +9,7 @@ import me.xginko.snowballfight.models.WrappedSnowball;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
@@ -26,17 +26,15 @@ import java.util.List;
 public class FireworkOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final SnowballCache cache;
     private final List<FireworkEffect.Type> types = new ArrayList<>();
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
     private final boolean isFolia, flicker, trail, onlyForEntities, onlyForSpecificEntities, asBlacklist;
 
-    public FireworkOnHit() {
+    protected FireworkOnHit() {
         shouldEnable();
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
-        this.cache = SnowballFight.getCache();
         SnowballConfig config = SnowballFight.getConfiguration();
         this.trail = config.getBoolean("settings.fireworks.trail", true);
         this.flicker = config.getBoolean("settings.fireworks.flicker", false);
@@ -56,13 +54,13 @@ public class FireworkOnHit implements SnowballModule, Listener {
             }
         });
         this.onlyForEntities = config.getBoolean("settings.fireworks.only-for-entities", false,
-                "Enable if you only want explosions to happen when snowballs hit an entity.");
+                "Enable if you only want explosions to happen when a snowball hits an entity.");
         this.onlyForSpecificEntities = config.getBoolean("settings.fireworks.only-for-specific-entities", false, """
                 When enabled, snowballs will only explode for the configured entity types below.\s
                 Needs only-for-entities to be set to true.""");
         this.asBlacklist = config.getBoolean("settings.fireworks.use-list-as-blacklist", false, """
-                Setting this and only-for-specific-entities to true will mean there won't be an explosion\s
-                when one of the configured entities are hit by a snowball.""");
+                Setting this and only-for-specific-entities to true will mean there will only be an explosion\s
+                if the hit entity is NOT on this list.""");
         config.getList("settings.fireworks.specific-entity-types",
                 List.of(EntityType.PLAYER.name()),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
@@ -111,8 +109,9 @@ public class FireworkOnHit implements SnowballModule, Listener {
         final Block hitBlock = event.getHitBlock();
 
         if (hitBlock != null) {
-            final Location blockLoc = hitBlock.getLocation();
-            if (isFolia) scheduler.runAtLocation(blockLoc, firework -> spawnFirework(blockLoc, event.getWrappedSnowball()));
+            final BlockFace hitFace = event.getHitBlockFace();
+            final Location fireworkLoc = hitFace != null ? hitBlock.getRelative(hitFace).getLocation().toCenterLocation() : hitBlock.getLocation().toCenterLocation();
+            if (isFolia) scheduler.runAtLocation(fireworkLoc, firework -> spawnFirework(fireworkLoc, event.getWrappedSnowball()));
             else spawnFirework(hitBlock.getLocation(), event.getWrappedSnowball());
         }
     }
@@ -127,7 +126,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
                 .trail(trail)
                 .build());
         firework.setFireworkMeta(meta);
-        firework.setShooter(snowball.snowball().getShooter());
+        firework.setShooter(snowball.snowball().getShooter()); // Copy over shooter for damage tracking
         firework.detonate();
     }
 }
