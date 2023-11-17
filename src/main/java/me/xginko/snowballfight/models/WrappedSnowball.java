@@ -26,11 +26,9 @@ public class WrappedSnowball {
             primaryColor = config.getRandomColor();
         if (secondaryColor == null)
             return primaryColor;
-        int tries = 0;
-        while (primaryColor.equals(secondaryColor)) {
-            if (tries > 100) break;
-            primaryColor = config.getRandomColor();
-            tries++;
+        for (int i = 0; i < 100; i++) {
+            if (!primaryColor.equals(secondaryColor)) break;
+            else primaryColor = config.getRandomColor();
         }
         return primaryColor;
     }
@@ -41,11 +39,9 @@ public class WrappedSnowball {
             secondaryColor = config.getRandomColor();
         if (primaryColor == null)
             return secondaryColor;
-        int tries = 0;
-        while (secondaryColor.equals(primaryColor)) {
-            if (tries > 100) break;
-            secondaryColor = config.getRandomColor();
-            tries++;
+        for (int i = 0; i < 100; i++) {
+            if (!secondaryColor.equals(primaryColor)) break;
+            else secondaryColor = config.getRandomColor();
         }
         return secondaryColor;
     }

@@ -65,7 +65,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
                 When enabled, snowballs will only explode for the configured entity types below.\s
                 Needs only-for-entities to be set to true.""");
         this.asBlacklist = config.getBoolean("settings.fireworks.use-list-as-blacklist", false, """
-                Setting this and only-for-specific-entities to true will mean there will only be an explosion\s
+                Setting this and only-for-specific-entities to true will mean there will only be a firework effect\s
                 if the hit entity is NOT on this list.""");
         config.getList("settings.fireworks.specific-entity-types",
                 List.of(EntityType.PLAYER.name()),

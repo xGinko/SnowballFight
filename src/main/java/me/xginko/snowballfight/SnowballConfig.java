@@ -52,12 +52,14 @@ public class SnowballConfig {
     }
 
     public void structure() {
+        config.addDefault("settings.cooldown", null);
         config.addDefault("settings.damage", null);
         config.addDefault("settings.explosions", null);
         config.addDefault("settings.fireworks", null);
         config.addDefault("settings.trails", null);
         config.addDefault("settings.lightning", null);
         config.addDefault("settings.levitation", null);
+        config.addDefault("settings.snow", null);
     }
 
     public void saveConfig() {
