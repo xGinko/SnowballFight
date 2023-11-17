@@ -1,8 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 
-import me.xginko.snowballfight.listeners.ProjectileListener;
-
 import java.util.HashSet;
 
 public interface SnowballModule {
@@ -16,7 +14,6 @@ public interface SnowballModule {
     static void reloadModules() {
         modules.forEach(SnowballModule::disable);
         modules.clear();
-        modules.add(new ProjectileListener());
 
         modules.add(new DamageOnHit());
         modules.add(new ExplodeOnHit());

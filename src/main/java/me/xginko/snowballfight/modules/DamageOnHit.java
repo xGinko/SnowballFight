@@ -4,7 +4,6 @@ import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.events.SnowballHitEvent;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
@@ -12,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.ProjectileHitEvent;
 
 import java.util.HashSet;
 import java.util.List;
@@ -67,7 +67,8 @@ public class DamageOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    private void onSnowballHit(SnowballHitEvent event) {
+    private void onSnowballHit(ProjectileHitEvent event) {
+        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
         if (!(event.getHitEntity() instanceof LivingEntity living)) return;
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
 

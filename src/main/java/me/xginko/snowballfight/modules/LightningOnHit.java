@@ -4,7 +4,6 @@ import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.events.SnowballHitEvent;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -14,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.ProjectileHitEvent;
 
 import java.util.HashSet;
 import java.util.List;
@@ -81,7 +81,8 @@ public class LightningOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.LOW)
-    private void onSnowballHit(SnowballHitEvent event) {
+    private void onSnowballHit(ProjectileHitEvent event) {
+        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
         if (probability < 1.0 && new Random().nextDouble() > probability) return;
 
         final Entity hitEntity = event.getHitEntity();

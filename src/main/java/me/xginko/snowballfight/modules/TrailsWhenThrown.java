@@ -3,17 +3,19 @@ package me.xginko.snowballfight.modules;
 import com.destroystokyo.paper.ParticleBuilder;
 import com.tcoded.folialib.impl.ServerImplementation;
 import com.tcoded.folialib.wrapper.task.WrappedTask;
+import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.events.SnowballLaunchEvent;
 import me.xginko.snowballfight.models.WrappedSnowball;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class TrailsWhenThrown implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
+    private final SnowballCache snowballCache;
     private final HashMap<UUID, WrappedTask> particleTrails = new HashMap<>();
     private final int particlesPerTick;
     private final long maxTrailTaskAliveTime;
@@ -28,6 +31,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     protected TrailsWhenThrown() {
         shouldEnable();
         this.scheduler = SnowballFight.getFoliaLib().getImpl();
+        this.snowballCache = SnowballFight.getCache();
         SnowballConfig config = SnowballFight.getConfiguration();
         config.master().addComment("settings.trails", "\nSpawn colored particle trails when a snowball is launched.");
         this.particlesPerTick = config.getInt("settings.trails.particles-per-tick", 10,
@@ -53,9 +57,11 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    private void onSnowballLaunch(SnowballLaunchEvent event) {
-        final WrappedSnowball wrappedSnowball = event.getWrappedSnowball();
-        final Snowball snowball = wrappedSnowball.snowball();
+    private void onSnowballLaunch(ProjectileLaunchEvent event) {
+        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+
+        final Snowball snowball = (Snowball) event.getEntity();
+        final WrappedSnowball wrappedSnowball = snowballCache.getOrAdd(snowball);
 
         // According to console errors, only redstone particles can be colored
         ParticleBuilder primary = new ParticleBuilder(Particle.REDSTONE)
