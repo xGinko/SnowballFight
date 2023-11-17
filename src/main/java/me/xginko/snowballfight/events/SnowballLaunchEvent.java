@@ -16,8 +16,12 @@ public class SnowballLaunchEvent extends ProjectileLaunchEvent implements Cancel
     private @NotNull WrappedSnowball wrappedSnowball;
 
     public SnowballLaunchEvent(@NotNull Snowball snowball, boolean isCancelled) {
+        this(snowball, SnowballFight.getCache().getOrAdd(snowball), isCancelled);
+    }
+
+    public SnowballLaunchEvent(@NotNull Snowball snowball, @NotNull WrappedSnowball wrappedSnowball, boolean isCancelled) {
         super(snowball);
-        this.wrappedSnowball = SnowballFight.getCache().getOrAdd(snowball);
+        this.wrappedSnowball = wrappedSnowball;
         this.isCancelled = isCancelled;
     }
 

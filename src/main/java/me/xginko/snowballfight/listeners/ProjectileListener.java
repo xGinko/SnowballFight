@@ -1,5 +1,6 @@
 package me.xginko.snowballfight.listeners;
 
+import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.SnowballHitEvent;
 import me.xginko.snowballfight.events.SnowballLaunchEvent;
@@ -15,7 +16,11 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 
 public class ProjectileListener implements SnowballModule, Listener {
 
-    public ProjectileListener() {}
+    private final SnowballCache cache;
+
+    public ProjectileListener() {
+        this.cache = SnowballFight.getCache();
+    }
 
     @Override
     public boolean shouldEnable() {
@@ -35,26 +40,19 @@ public class ProjectileListener implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onProjectileLaunch(ProjectileLaunchEvent event) {
-        if (
-                event.getEntityType().equals(EntityType.SNOWBALL)
-                && !new SnowballLaunchEvent((Snowball) event.getEntity(), event.isCancelled()).callEvent()
-        ) {
+        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        final Snowball snowball = (Snowball) event.getEntity();
+        if (!new SnowballLaunchEvent(snowball, cache.getOrAdd(snowball), event.isCancelled()).callEvent()) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onProjectileHit(ProjectileHitEvent event) {
-        if (
-                event.getEntityType().equals(EntityType.SNOWBALL)
-                && !new SnowballHitEvent(
-                        (Snowball) event.getEntity(),
-                        event.getHitEntity(),
-                        event.getHitBlock(),
-                        event.getHitBlockFace(),
-                        event.isCancelled()
-                ).callEvent()
-        ) {
+        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        final Snowball snowball = (Snowball) event.getEntity();
+        if (!new SnowballHitEvent(snowball, cache.getOrAdd(snowball), event.getHitEntity(),
+                event.getHitBlock(), event.getHitBlockFace(), event.isCancelled()).callEvent()) {
             event.setCancelled(true);
         }
     }

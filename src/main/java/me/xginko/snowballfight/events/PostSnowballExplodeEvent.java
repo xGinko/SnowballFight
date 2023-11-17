@@ -20,12 +20,9 @@ public class PostSnowballExplodeEvent extends Event {
     private final boolean setFire, breakBlocks, hasExploded;
 
     public PostSnowballExplodeEvent(
-            final @NotNull Snowball snowball,
-            final @Nullable Entity hitEntity,
-            final @NotNull Location explodeLocation,
-            final float explosionPower,
-            final boolean setFire,
-            final boolean breakBlocks,
+            final @NotNull Snowball snowball, final @Nullable Entity hitEntity,
+            final @NotNull Location explodeLocation, final float explosionPower,
+            final boolean setFire, final boolean breakBlocks,
             final boolean isAsync
     ) {
         super(isAsync);

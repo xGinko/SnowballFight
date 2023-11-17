@@ -21,12 +21,9 @@ public class PreSnowballExplodeEvent extends Event implements Cancellable {
     private boolean setFire, breakBlocks;
 
     public PreSnowballExplodeEvent(
-            @NotNull Snowball snowball,
-            @Nullable Entity hitEntity,
-            @NotNull Location explodeLocation,
-            float explosionPower,
-            boolean explosionSetFire,
-            boolean explosionBreakBlocks,
+            @NotNull Snowball snowball, @Nullable Entity hitEntity,
+            @NotNull Location explodeLocation, float explosionPower,
+            boolean explosionSetFire, boolean explosionBreakBlocks,
             final boolean isAsync
     ) {
         super(isAsync);
