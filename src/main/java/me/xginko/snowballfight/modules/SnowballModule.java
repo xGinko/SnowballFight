@@ -20,7 +20,6 @@ public interface SnowballModule {
         modules.add(new FireworkOnHit());
         modules.add(new LevitateOnHit());
         modules.add(new LightningOnHit());
-        modules.add(new SnowOnHit());
         modules.add(new ThrowCoolDown());
         modules.add(new TrailsWhenThrown());
 

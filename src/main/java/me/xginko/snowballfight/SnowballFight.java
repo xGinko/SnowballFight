@@ -18,6 +18,7 @@ public final class SnowballFight extends JavaPlugin {
     public void onEnable() {
         instance = this;
         logger = getLogger();
+
         reloadConfiguration();
         getCommand("snowballs").setExecutor(new SnowballsCommand());
     }
