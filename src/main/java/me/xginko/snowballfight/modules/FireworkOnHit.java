@@ -24,12 +24,13 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 public class FireworkOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
     private final SnowballCache snowballCache;
-    private final List<FireworkEffect.Type> types = new ArrayList<>();
+    private final List<FireworkEffect.Type> effectTypes = new ArrayList<>();
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
     private final boolean isFolia, flicker, trail, onlyForEntities, onlyForSpecificEntities, asBlacklist;
 
@@ -47,13 +48,13 @@ public class FireworkOnHit implements SnowballModule, Listener {
         this.flicker = config.getBoolean("settings.fireworks.flicker", false,
                 "Whether the firework particles should flicker.");
         config.getList("settings.fireworks.types",
-                List.of(FireworkEffect.Type.BALL.name(), FireworkEffect.Type.STAR.name()), """
+                List.of(FireworkEffect.Type.BURST.name(), FireworkEffect.Type.BALL.name()), """
                         FireworkEffect Types you wish to use. Has to be a valid enum from:\s
                         https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html"""
         ).forEach(effect -> {
             try {
                 FireworkEffect.Type effectType = FireworkEffect.Type.valueOf(effect);
-                this.types.add(effectType);
+                this.effectTypes.add(effectType);
             } catch (IllegalArgumentException e) {
                 SnowballFight.getLog().warning("FireworkEffect Type '"+effect+"' not recognized. " +
                         "Please use valid enums from: https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html");
@@ -129,6 +130,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
         WrappedSnowball wrappedSnowball = snowballCache.getOrAdd(snowball);
         meta.addEffect(FireworkEffect.builder()
                 .withColor(wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor())
+                .with(effectTypes.get(new Random().nextInt(effectTypes.size())))
                 .flicker(flicker)
                 .trail(trail)
                 .build());
