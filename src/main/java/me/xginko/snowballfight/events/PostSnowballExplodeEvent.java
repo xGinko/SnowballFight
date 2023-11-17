@@ -36,7 +36,7 @@ public class PostSnowballExplodeEvent extends Event {
         this.setFire = setFire;
         this.breakBlocks = breakBlocks;
         this.hasExploded = explodeLocation.getWorld().createExplosion(
-                snowball.getShooter() instanceof LivingEntity living ? living : snowball, // Set explode source for tracking
+                snowball.getShooter() instanceof LivingEntity living ? living : snowball, // Set explode source for damage tracking
                 explodeLocation,
                 explosionPower,
                 setFire,

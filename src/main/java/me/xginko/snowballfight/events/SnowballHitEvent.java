@@ -19,7 +19,13 @@ public class SnowballHitEvent extends ProjectileHitEvent implements Cancellable 
 
     private @NotNull WrappedSnowball wrappedSnowball;
 
-    public SnowballHitEvent(@NotNull Snowball snowball, @Nullable Entity hitEntity, @Nullable Block hitBlock, @Nullable BlockFace hitFace, boolean isCancelled) {
+    public SnowballHitEvent(
+            @NotNull Snowball snowball,
+            @Nullable Entity hitEntity,
+            @Nullable Block hitBlock,
+            @Nullable BlockFace hitFace,
+            boolean isCancelled
+    ) {
         super(snowball, hitEntity, hitBlock, hitFace);
         this.wrappedSnowball = SnowballFight.getCache().getOrAdd(snowball);
         this.isCancelled = isCancelled;

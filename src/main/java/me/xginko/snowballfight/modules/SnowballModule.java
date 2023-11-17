@@ -16,15 +16,14 @@ public interface SnowballModule {
     static void reloadModules() {
         modules.forEach(SnowballModule::disable);
         modules.clear();
-
         modules.add(new ProjectileListener());
 
+        modules.add(new DamageOnHit());
         modules.add(new ExplodeOnHit());
         modules.add(new FireworkOnHit());
         modules.add(new LightningOnHit());
         modules.add(new TrailsWhenThrown());
         modules.add(new LevitateOnHit());
-
 
         modules.forEach(module -> {
             if (module.shouldEnable()) module.enable();

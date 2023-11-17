@@ -52,10 +52,11 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    private void onPostSnowballExplode(SnowballLaunchEvent event) {
+    private void onSnowballLaunch(SnowballLaunchEvent event) {
         final WrappedSnowball wrappedSnowball = event.getWrappedSnowball();
         final Snowball snowball = wrappedSnowball.snowball();
 
+        // According to console errors, only redstone particles can be colored
         ParticleBuilder primary = new ParticleBuilder(Particle.REDSTONE)
                 .color(wrappedSnowball.getPrimaryColor())
                 .count(particlesPerTick);
@@ -69,16 +70,18 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
         this.particleTrails.put(
                 snowballUUID,
                 scheduler.runAtEntityTimer(snowball, () -> {
+                    // Get new current location on each run
                     final Location snowballLoc = snowball.getLocation();
+                    // Spawn particles using preconfigured ParticleBuilders
                     primary.location(snowballLoc).spawn();
                     secondary.location(snowballLoc).spawn();
+                    // Stop the task because by itself it would keep running until server restart.
                     if (snowball.isDead() || System.currentTimeMillis() > stopTimeMillis) {
-                        // Stop the task because by itself it will loop until server restart.
                         WrappedTask trails = particleTrails.get(snowballUUID);
                         if (trails != null) trails.cancel();
                         particleTrails.remove(snowballUUID);
                     }
-                }, 1L, 1L)
+                }, 1L, 1L) // 1 Tick start delay because folia, 1 Tick execute delay to get the best looking trails
         );
     }
 }

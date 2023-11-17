@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import me.xginko.snowballfight.models.WrappedSnowball;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Snowball;
-import org.bukkit.entity.Villager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,12 +26,12 @@ public final class SnowballCache {
 
     public @Nullable WrappedSnowball get(@NotNull UUID uuid) {
         WrappedSnowball wrappedSnowball = this.cache.getIfPresent(uuid);
-        return wrappedSnowball == null && Bukkit.getEntity(uuid) instanceof Snowball snowball ? add(snowball) : wrappedSnowball;
+        return wrappedSnowball == null && Bukkit.getEntity(uuid) instanceof Snowball snowball ? this.add(snowball) : wrappedSnowball;
     }
 
     public @NotNull WrappedSnowball getOrAdd(@NotNull Snowball snowball) {
         WrappedSnowball WrappedSnowball = this.cache.getIfPresent(snowball.getUniqueId());
-        return WrappedSnowball == null ? add(new WrappedSnowball(snowball)) : add(WrappedSnowball);
+        return WrappedSnowball == null ? this.add(new WrappedSnowball(snowball)) : this.add(WrappedSnowball);
     }
 
     public @NotNull WrappedSnowball add(@NotNull WrappedSnowball snowball) {
@@ -41,7 +40,7 @@ public final class SnowballCache {
     }
 
     public @NotNull WrappedSnowball add(@NotNull Snowball snowball) {
-        return add(new WrappedSnowball(snowball));
+        return this.add(new WrappedSnowball(snowball));
     }
 
     public boolean contains(@NotNull UUID uuid) {
@@ -49,10 +48,10 @@ public final class SnowballCache {
     }
 
     public boolean contains(@NotNull WrappedSnowball snowball) {
-        return this.cache.getIfPresent(snowball.snowball().getUniqueId()) != null;
+        return this.contains(snowball.snowball().getUniqueId());
     }
 
-    public boolean contains(@NotNull Villager villager) {
-        return this.cache.getIfPresent(villager.getUniqueId()) != null;
+    public boolean contains(@NotNull Snowball snowball) {
+        return this.contains(snowball.getUniqueId());
     }
 }

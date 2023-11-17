@@ -39,11 +39,9 @@ public class FireworkOnHit implements SnowballModule, Listener {
         this.trail = config.getBoolean("settings.fireworks.trail", true);
         this.flicker = config.getBoolean("settings.fireworks.flicker", false);
         config.getList("settings.fireworks.types",
-                List.of(FireworkEffect.Type.BALL.name(), FireworkEffect.Type.STAR.name()),
-                """
-                        FireworkEffect Types you wish to use. Has to be a valid enum from:
-                        https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html
-                        """
+                List.of(FireworkEffect.Type.BALL.name(), FireworkEffect.Type.STAR.name()), """
+                        FireworkEffect Types you wish to use. Has to be a valid enum from:\s
+                        https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html"""
         ).forEach(effect -> {
             try {
                 FireworkEffect.Type effectType = FireworkEffect.Type.valueOf(effect);
@@ -101,8 +99,8 @@ public class FireworkOnHit implements SnowballModule, Listener {
         }
 
         if (hitEntity != null) {
-            if (isFolia) scheduler.runAtEntity(hitEntity, firework -> spawnFirework(hitEntity.getLocation(), event.getWrappedSnowball()));
-            else spawnFirework(hitEntity.getLocation(), event.getWrappedSnowball());
+            if (isFolia) scheduler.runAtEntity(hitEntity, firework -> detonateFirework(hitEntity.getLocation(), event.getWrappedSnowball()));
+            else detonateFirework(hitEntity.getLocation(), event.getWrappedSnowball());
             return;
         }
 
@@ -111,12 +109,12 @@ public class FireworkOnHit implements SnowballModule, Listener {
         if (hitBlock != null) {
             final BlockFace hitFace = event.getHitBlockFace();
             final Location fireworkLoc = hitFace != null ? hitBlock.getRelative(hitFace).getLocation().toCenterLocation() : hitBlock.getLocation().toCenterLocation();
-            if (isFolia) scheduler.runAtLocation(fireworkLoc, firework -> spawnFirework(fireworkLoc, event.getWrappedSnowball()));
-            else spawnFirework(hitBlock.getLocation(), event.getWrappedSnowball());
+            if (isFolia) scheduler.runAtLocation(fireworkLoc, firework -> detonateFirework(fireworkLoc, event.getWrappedSnowball()));
+            else detonateFirework(hitBlock.getLocation(), event.getWrappedSnowball());
         }
     }
 
-    private void spawnFirework(final Location explosionLoc, final WrappedSnowball snowball) {
+    private void detonateFirework(final Location explosionLoc, final WrappedSnowball snowball) {
         Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();

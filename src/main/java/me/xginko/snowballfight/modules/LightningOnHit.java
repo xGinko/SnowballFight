@@ -23,9 +23,9 @@ public class LightningOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
-    private final boolean isFolia, dealDamage, onlyForEntities, onlyForSpecificEntities, asBlacklist;
-    private final int strikeAmount, flashCount;
     private final double probability;
+    private final int strikeAmount, flashCount;
+    private final boolean isFolia, dealDamage, onlyForEntities, onlyForSpecificEntities, asBlacklist;
 
     protected LightningOnHit() {
         shouldEnable();
@@ -91,16 +91,16 @@ public class LightningOnHit implements SnowballModule, Listener {
         }
 
         if (hitEntity != null) {
-            if (isFolia) scheduler.runAtEntity(hitEntity, strike -> this.strikeLightning(hitEntity.getLocation()));
-            else this.strikeLightning(hitEntity.getLocation());
+            if (isFolia) scheduler.runAtEntity(hitEntity, strike -> strikeLightning(hitEntity.getLocation()));
+            else strikeLightning(hitEntity.getLocation());
             return;
         }
 
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
             final Location hitBlockLoc = hitBlock.getLocation();
-            if (isFolia) scheduler.runAtLocation(hitBlockLoc, strike -> this.strikeLightning(hitBlockLoc));
-            else this.strikeLightning(hitBlockLoc);
+            if (isFolia) scheduler.runAtLocation(hitBlockLoc, strike -> strikeLightning(hitBlockLoc));
+            else strikeLightning(hitBlockLoc);
         }
     }
 

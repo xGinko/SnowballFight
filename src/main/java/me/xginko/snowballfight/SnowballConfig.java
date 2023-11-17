@@ -30,7 +30,7 @@ public class SnowballConfig {
                 "<color:#59B1BD>",   // Mid day snow shadow blue
                 "<color:#407794>"    // Evening slightly red sun snow shadow but more blue
         );
-        List<String> configuredColors = getList("settings.colors", defaults, "You need to configure at least 2 colors.");
+        List<String> configuredColors = getList("settings.colors", defaults, "/nYou need to configure at least 2 colors.");
         if (configuredColors.size() < 2) {
             SnowballFight.getLog().severe("You need to configure at least 2 colors. Resetting to default colors.");
             config.set("settings.colors", defaults);
@@ -39,7 +39,7 @@ public class SnowballConfig {
         configuredColors.forEach(serializedColor -> {
             final TextColor textColor = miniMessage.deserialize(serializedColor).color();
             if (textColor != null) this.colors.add(Color.fromRGB(textColor.red(), textColor.green(), textColor.blue()));
-            else SnowballFight.getLog().warning("Color '" + serializedColor + "' is not formatted properly. Use the following format: <color:#E54264>");
+            else SnowballFight.getLog().warning("Color '" + serializedColor + "' is not formatted properly. Use the following format: <color:#FFFFFF>");
         });
         structure();
     }
@@ -52,16 +52,12 @@ public class SnowballConfig {
     }
 
     public void structure() {
-        config.addDefault("settings.explosions", null);
-        config.addSection("settings.explosions", "explosions");
-        config.addDefault("settings.fireworks", null);
-        config.addSection("settings.fireworks", "fireworks");
-        config.addDefault("settings.trails", null);
-        config.addSection("settings.trails", "trails");
-        config.addDefault("settings.lightning", null);
-        config.addSection("settings.lightning", "lightning");
-        config.addDefault("settings.levitation", null);
-        config.addSection("settings.levitation", "levitation");
+        config.addDefault("settings.damage", null, "\n");
+        config.addDefault("settings.explosions", null, "\n");
+        config.addDefault("settings.fireworks", null, "\n");
+        config.addDefault("settings.trails", null, "\n");
+        config.addDefault("settings.lightning", null, "\n");
+        config.addDefault("settings.levitation", null, "\n");
     }
 
     public void saveConfig() {
