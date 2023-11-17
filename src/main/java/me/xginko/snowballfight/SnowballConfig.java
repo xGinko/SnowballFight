@@ -59,7 +59,6 @@ public class SnowballConfig {
         config.addDefault("settings.trails", null);
         config.addDefault("settings.lightning", null);
         config.addDefault("settings.levitation", null);
-        config.addDefault("settings.snow", null);
     }
 
     public void saveConfig() {
