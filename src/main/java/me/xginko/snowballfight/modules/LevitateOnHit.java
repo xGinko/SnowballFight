@@ -39,7 +39,7 @@ public class LevitateOnHit implements SnowballModule, Listener {
                 "When enabled, only configured entities will levitate when hit by a snowball.");
         this.asBlacklist = config.getBoolean("settings.levitation.use-list-as-blacklist", false,
                 "All entities except the ones on this list will levitate when hit by a snowball if set to true.");
-        config.getList("settings.explosions.specific-entity-types",
+        config.getList("settings.levitation.specific-entity-types",
                 List.of(EntityType.PLAYER.name()),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
         ).forEach(configuredType -> {
