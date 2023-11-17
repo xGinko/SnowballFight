@@ -32,6 +32,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
+        config.master().addComment("settings.explosions","\nMake snowballs explode when hitting something.");
         this.explosionPower = config.getFloat("settings.explosions.power", 2.0F,
                 "TNT has a power of 4.0.");
         this.explosionSetFire = config.getBoolean("settings.explosions.set-fire", false,

@@ -29,7 +29,7 @@ public class DamageOnHit implements SnowballModule, Listener {
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
-        config.master().addComment("settings.damage.enable", "Enable snowballs dealing damage when they hit an entity.");
+        config.master().addComment("settings.damage", "\nEnable snowballs dealing damage when they hit an entity.");
         this.damage = config.getDouble("settings.damage.damage", 3.0,
                 "Configure the damage that entities take from getting hit by a snowball.");
         this.onlyForSpecificEntities = config.getBoolean("settings.damage.only-for-specific-entities", false,

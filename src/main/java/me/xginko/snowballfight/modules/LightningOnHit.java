@@ -33,8 +33,8 @@ public class LightningOnHit implements SnowballModule, Listener {
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
-        config.master().addComment("settings.lightning.enable",
-                "Will strike the closest player with lightning.");
+        config.master().addComment("settings.lightning",
+                "\nStrike a lightning when a snowball hits something.");
         this.dealDamage = config.getBoolean("settings.lightning.deal-damage", true,
                 "Whether the lightning strike should deal damage.");
         this.strikeAmount = config.getInt("settings.lightning.strike-count", 2,

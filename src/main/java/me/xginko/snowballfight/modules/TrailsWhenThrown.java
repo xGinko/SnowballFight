@@ -29,6 +29,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
         shouldEnable();
         this.scheduler = SnowballFight.getFoliaLib().getImpl();
         SnowballConfig config = SnowballFight.getConfiguration();
+        config.master().addComment("settings.trails", "\nSpawn colored particle trails when a snowball is launched.");
         this.particlesPerTick = config.getInt("settings.trails.particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low.");
         this.maxTrailTaskAliveTime = config.getInt("settings.trails.max-trail-task-alive-time-seconds", 30,

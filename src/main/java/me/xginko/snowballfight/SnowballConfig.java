@@ -19,7 +19,7 @@ public class SnowballConfig {
 
     protected SnowballConfig() throws Exception {
         this.config = loadConfig(new File(SnowballFight.getInstance().getDataFolder(), "config.yml"));
-        this.cacheKeepSeconds = getInt("settings.cache-keep-seconds", 20, "Don't touch unless you know what you're doing.");
+        this.cacheKeepSeconds = getInt("settings.cache-keep-seconds", 20, "\nDon't touch unless you know what you're doing.");
         final MiniMessage miniMessage = MiniMessage.miniMessage();
         final List<String> defaults = List.of(
                 "<color:#B3E3F4>",   // Snowy Dark Sky
@@ -30,7 +30,7 @@ public class SnowballConfig {
                 "<color:#59B1BD>",   // Mid day snow shadow blue
                 "<color:#407794>"    // Evening slightly red sun snow shadow but more blue
         );
-        List<String> configuredColors = getList("settings.colors", defaults, "/nYou need to configure at least 2 colors.");
+        List<String> configuredColors = getList("settings.colors", defaults, "\nYou need to configure at least 2 colors.");
         if (configuredColors.size() < 2) {
             SnowballFight.getLog().severe("You need to configure at least 2 colors. Resetting to default colors.");
             config.set("settings.colors", defaults);
@@ -52,12 +52,12 @@ public class SnowballConfig {
     }
 
     public void structure() {
-        config.addDefault("settings.damage", null, "\n");
-        config.addDefault("settings.explosions", null, "\n");
-        config.addDefault("settings.fireworks", null, "\n");
-        config.addDefault("settings.trails", null, "\n");
-        config.addDefault("settings.lightning", null, "\n");
-        config.addDefault("settings.levitation", null, "\n");
+        config.addDefault("settings.damage", null);
+        config.addDefault("settings.explosions", null);
+        config.addDefault("settings.fireworks", null);
+        config.addDefault("settings.trails", null);
+        config.addDefault("settings.lightning", null);
+        config.addDefault("settings.levitation", null);
     }
 
     public void saveConfig() {

@@ -36,8 +36,12 @@ public class FireworkOnHit implements SnowballModule, Listener {
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
-        this.trail = config.getBoolean("settings.fireworks.trail", true);
-        this.flicker = config.getBoolean("settings.fireworks.flicker", false);
+        config.master().addComment("settings.fireworks",
+                "\nDetonate a firework when a snowball hits something for a cool effect.");
+        this.trail = config.getBoolean("settings.fireworks.trail", true,
+                "Whether the firework particles should leave trails.");
+        this.flicker = config.getBoolean("settings.fireworks.flicker", false,
+                "Whether the firework particles should flicker.");
         config.getList("settings.fireworks.types",
                 List.of(FireworkEffect.Type.BALL.name(), FireworkEffect.Type.STAR.name()), """
                         FireworkEffect Types you wish to use. Has to be a valid enum from:\s

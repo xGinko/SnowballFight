@@ -30,7 +30,7 @@ public class LevitateOnHit implements SnowballModule, Listener {
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
-        config.master().addComment("settings.levitation.enable", "Will apply levitation effect on hit entities.");
+        config.master().addComment("settings.levitation", "\nApply levitation effect on entities hit by snowballs.");
         this.duration = config.getInt("settings.levitation.duration-ticks", 40,
                 "1 second = 20 ticks.");
         this.amplifier = config.getInt("settings.levitation.potion-amplifier", 6,
