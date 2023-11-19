@@ -18,8 +18,11 @@ public interface SnowballModule {
         modules.add(new DamageOnHit());
         modules.add(new ExplodeOnHit());
         modules.add(new FireworkOnHit());
+        modules.add(new KnockbackOnHit());
         modules.add(new LevitateOnHit());
         modules.add(new LightningOnHit());
+        modules.add(new SlownessOnHit());
+        modules.add(new SnowOnHit());
         modules.add(new ThrowCoolDown());
         modules.add(new TrailsWhenThrown());
 

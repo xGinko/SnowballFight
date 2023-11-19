@@ -80,7 +80,7 @@ public class LightningOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll(this);
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
         if (probability < 1.0 && new Random().nextDouble() > probability) return;
@@ -88,7 +88,7 @@ public class LightningOnHit implements SnowballModule, Listener {
         final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {
             if (hitEntity == null) return;
-            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(event.getHitEntity().getType()))) return;
+            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
         }
 
         if (hitEntity != null) {

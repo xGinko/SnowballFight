@@ -16,24 +16,22 @@ public class PreSnowballExplodeEvent extends Event implements Cancellable {
 
     private @NotNull Snowball snowball;
     private @Nullable Entity hitEntity;
-    private @NotNull Location explodeLocation;
+    private @NotNull Location location;
     private float explosionPower;
     private boolean setFire, breakBlocks;
 
     public PreSnowballExplodeEvent(
-            @NotNull Snowball snowball, @Nullable Entity hitEntity,
-            @NotNull Location explodeLocation, float explosionPower,
-            boolean explosionSetFire, boolean explosionBreakBlocks,
-            final boolean isAsync
+            @NotNull Snowball snowball, @Nullable Entity hitEntity, @NotNull Location location,
+            float power, boolean setFire, boolean breakBlocks, boolean isAsync
     ) {
         super(isAsync);
         this.isCancelled = false;
         this.snowball = snowball;
         this.hitEntity = hitEntity;
-        this.explodeLocation = explodeLocation;
-        this.explosionPower = explosionPower;
-        this.setFire = explosionSetFire;
-        this.breakBlocks = explosionBreakBlocks;
+        this.location = location;
+        this.explosionPower = power;
+        this.setFire = setFire;
+        this.breakBlocks = breakBlocks;
     }
 
     public @NotNull Snowball getSnowball() {
@@ -49,10 +47,10 @@ public class PreSnowballExplodeEvent extends Event implements Cancellable {
         this.hitEntity = hitEntity;
     }
     public @NotNull Location getExplodeLocation() {
-        return explodeLocation;
+        return location;
     }
-    public void setExplodeLocation(@NotNull Location explodeLocation) {
-        this.explodeLocation = explodeLocation;
+    public void setExplodeLocation(@NotNull Location location) {
+        this.location = location;
     }
     public float getExplosionPower() {
         return explosionPower;

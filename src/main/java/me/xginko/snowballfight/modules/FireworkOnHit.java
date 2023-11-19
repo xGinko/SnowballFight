@@ -104,7 +104,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
         final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {
             if (hitEntity == null) return;
-            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(event.getHitEntity().getType()))) return;
+            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
         }
 
         if (hitEntity != null) {
