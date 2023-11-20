@@ -26,7 +26,7 @@ public class SnowOnHit implements SnowballModule, Listener {
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
     private final Material powderedSnow;
     private final int snowPatchRadius;
-    private final boolean isFolia, formIce, addSnowLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
+    private final boolean isFolia, formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
     private boolean powderSnowEnabled;
 
     protected SnowOnHit() {
@@ -37,19 +37,21 @@ public class SnowOnHit implements SnowballModule, Listener {
         SnowballConfig config = SnowballFight.getConfiguration();
         config.master().addComment("settings.snow",
                 "\nCovers the hit block in snow.");
-        this.addSnowLayer = config.getBoolean("settings.snow.add-to-existing-layer", true,
-                "Adds snow to existing snow layers.");
-        this.formIce = config.getBoolean("settings.snow.form-ice", true,
-                "Turns water to ice when hit.");
         this.snowPatchRadius = config.getInt("settings.snow.size", 2,
                 "How big the snow patch should be that the snowball leaves as block radius.");
+        this.formIce = config.getBoolean("settings.snow.form-ice", true,
+                "Turns water to ice when hit.");
+        this.addSnowLayer = config.getBoolean("settings.snow.stack-snow-layer.enable", true,
+                "Adds snow on top of existing snow layers.");
+        this.replaceFullLayer = config.getBoolean("settings.snow.stack-snow-layer.full-layers.turn-to-blocks", false,
+                "Recommended to leave off if you want the snow layers to be able to melt away.");
         this.powderedSnow = Material.matchMaterial("POWDER_SNOW");
-        this.powderSnowEnabled = config.getBoolean("settings.snow.use-powder-snow", powderedSnow != null,
+        this.powderSnowEnabled = config.getBoolean("settings.snow.stack-snow-layer.full-layers.use-powder-snow", powderedSnow != null,
                 "Of course only works if your minecraft version has powder snow.");
         if (powderSnowEnabled && powderedSnow == null) {
             powderSnowEnabled = false;
             SnowballFight.getLog().warning("(Snow) Your server version does not support powder snow. Using regular snow.");
-            config.master().set("settings.snow.use-powder-snow", false);
+            config.master().set("settings.snow.stack-snow-layer.full-layers.use-powder-snow", false);
         }
         this.onlyForEntities = config.getBoolean("settings.snow.only-for-entities", false,
                 "Enable if you only want snow to spread when snowballs hit an entity.");
@@ -132,12 +134,19 @@ public class SnowOnHit implements SnowballModule, Listener {
                         if (addSnowLayer && iterativeType.equals(Material.SNOW)) {
                             Snow snow = (Snow) iterativeBlock.getBlockData();
                             final int layers = snow.getLayers();
-                            if (layers < snow.getMaximumLayers() - 1) {
-                                snow.setLayers(layers + 1);
-                                iterativeBlock.setBlockData(snow);
+                            if (replaceFullLayer) {
+                                if (layers < snow.getMaximumLayers() - 1) {
+                                    snow.setLayers(layers + 1);
+                                    iterativeBlock.setBlockData(snow);
+                                } else {
+                                    // If only one or no more layers left to add, turn into snow block.
+                                    iterativeBlock.setType(powderSnowEnabled ? powderedSnow : Material.SNOW_BLOCK, false);
+                                }
                             } else {
-                                // If only one or no more layers left to add, turn into snow block.
-                                iterativeBlock.setType(powderSnowEnabled ? powderedSnow : Material.SNOW_BLOCK, false);
+                                if (layers < snow.getMaximumLayers()) {
+                                    snow.setLayers(layers + 1);
+                                    iterativeBlock.setBlockData(snow);
+                                }
                             }
                             continue;
                         }
