@@ -1,5 +1,6 @@
 package me.xginko.snowballfight.modules;
 
+import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.tcoded.folialib.FoliaLib;
@@ -34,7 +35,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
     private final Cache<UUID, Boolean> snowballFireworks;
     private final List<FireworkEffect.Type> effectTypes = new ArrayList<>();
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
-    private final boolean isFolia, dealDamage, flicker, trail, onlyForEntities, onlyForSpecificEntities, asBlacklist;
+    private final boolean isFolia, dealDamage, dealKnockback, flicker, trail, onlyForEntities, onlyForSpecificEntities, asBlacklist;
 
     protected FireworkOnHit() {
         shouldEnable();
@@ -47,7 +48,9 @@ public class FireworkOnHit implements SnowballModule, Listener {
         config.master().addComment("settings.fireworks",
                 "\nDetonate a firework when a snowball hits something for a cool effect.");
         this.dealDamage = config.getBoolean("settings.fireworks.deal-damage", false,
-                "Whether firework effects deal damage like regular fireworks or not.");
+                "Should firework effects deal damage like regular fireworks?");
+        this.dealKnockback = config.getBoolean("settings.fireworks.deal-knockback", false,
+                "Should firework effects deal knockback like regular fireworks?");
         this.trail = config.getBoolean("settings.fireworks.trail", true,
                 "Whether the firework particles should leave trails.");
         this.flicker = config.getBoolean("settings.fireworks.flicker", false,
@@ -130,7 +133,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
 
     private void detonateFirework(final Location explosionLoc, final Snowball snowball) {
         Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
-        this.snowballFireworks.put(firework.getUniqueId(), true); // store uuid to cancel damage by fireworks
+        if (!dealDamage || !dealKnockback) this.snowballFireworks.put(firework.getUniqueId(), true); // store uuid to cancel damage by fireworks
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();
         WrappedSnowball wrappedSnowball = snowballCache.getOrAdd(snowball);
@@ -148,6 +151,13 @@ public class FireworkOnHit implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onFireworkExplode(EntityDamageByEntityEvent event) {
         if (!dealDamage && this.snowballFireworks.getIfPresent(event.getDamager().getUniqueId()) != null) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    private void onKnockback(EntityKnockbackByEntityEvent event) {
+        if (!dealKnockback && this.snowballFireworks.getIfPresent(event.getHitBy().getUniqueId()) != null) {
             event.setCancelled(true);
         }
     }
