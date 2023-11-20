@@ -126,7 +126,7 @@ public class SnowOnHit implements SnowballModule, Listener {
 
                         if (iterativeType.isAir()) {
                             if (iterativeBlock.getRelative(BlockFace.DOWN).getType().isSolid()) {
-                                iterativeBlock.setType(Material.SNOW, false);
+                                iterativeBlock.setType(Material.SNOW, true);
                             }
                             continue;
                         }
@@ -140,7 +140,7 @@ public class SnowOnHit implements SnowballModule, Listener {
                                     iterativeBlock.setBlockData(snow);
                                 } else {
                                     // If only one or no more layers left to add, turn into snow block.
-                                    iterativeBlock.setType(powderSnowEnabled ? powderedSnow : Material.SNOW_BLOCK, false);
+                                    iterativeBlock.setType(powderSnowEnabled ? powderedSnow : Material.SNOW_BLOCK, true);
                                 }
                             } else {
                                 if (layers < snow.getMaximumLayers()) {
@@ -152,7 +152,7 @@ public class SnowOnHit implements SnowballModule, Listener {
                         }
 
                         if (formIce && iterativeType.equals(Material.WATER)) {
-                            iterativeBlock.setType(Material.ICE, false);
+                            iterativeBlock.setType(Material.ICE, true);
                         }
                     }
                 }
