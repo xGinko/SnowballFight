@@ -55,7 +55,7 @@ public class LevitateOnHit implements SnowballModule, Listener {
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.levitation.enable", true);
+        return SnowballFight.getConfiguration().getBoolean("settings.levitation.enable", false);
     }
 
     @Override
