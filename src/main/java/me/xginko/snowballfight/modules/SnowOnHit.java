@@ -19,14 +19,15 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class SnowOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
-    private final int radius;
+    private final Material powderedSnow;
+    private final int snowPatchRadius;
     private final boolean isFolia, formIce, addSnowLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
+    private boolean powderSnowEnabled;
 
     protected SnowOnHit() {
         shouldEnable();
@@ -40,8 +41,16 @@ public class SnowOnHit implements SnowballModule, Listener {
                 "Adds snow to existing snow layers.");
         this.formIce = config.getBoolean("settings.snow.form-ice", true,
                 "Turns water to ice when hit.");
-        this.radius = config.getInt("settings.snow.size", 2,
+        this.snowPatchRadius = config.getInt("settings.snow.size", 2,
                 "How big the snow patch should be that the snowball leaves as block radius.");
+        this.powderedSnow = Material.matchMaterial("POWDER_SNOW");
+        this.powderSnowEnabled = config.getBoolean("settings.snow.use-powder-snow", powderedSnow != null,
+                "Of course only works if your minecraft version has powder snow.");
+        if (powderSnowEnabled && powderedSnow == null) {
+            powderSnowEnabled = false;
+            SnowballFight.getLog().warning("(Snow) Your server version does not support powder snow. Using regular snow.");
+            config.master().set("settings.snow.use-powder-snow", false);
+        }
         this.onlyForEntities = config.getBoolean("settings.snow.only-for-entities", false,
                 "Enable if you only want explosions to happen when snowballs hit an entity.");
         this.onlyForSpecificEntities = config.getBoolean("settings.snow.only-for-specific-entities", false, """
@@ -92,62 +101,53 @@ public class SnowOnHit implements SnowballModule, Listener {
 
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
-            // Assume snow position is this block +=y
-            coverWithSnowAt(hitBlock.getRelative(BlockFace.UP));
+            coverWithSnowAt(hitBlock);
             return;
         }
 
         if (hitEntity != null) {
-            // Assume snow position is this.blockPos.+=y
-            coverWithSnowAt(hitEntity.getLocation().toBlockLocation().add(0,1,0).getBlock());
+            coverWithSnowAt(hitEntity.getLocation().getBlock());
         }
     }
 
     private void coverWithSnowAt(Block startBlock) {
-        final Location startLoc = startBlock.getLocation();
-        scheduler.runAtLocationLater(startLoc, snowDown -> {
-            for (int x = -2-radius; x <= radius+2; x++) {
-                for (int z = -2-radius; z <= radius+2; z++) {
-                    for (int y = -2-radius; y < radius+2; y++) {
+        final Location hitLoc = startBlock.getLocation().toCenterLocation();
+        scheduler.runAtLocationLater(hitLoc, snowDown -> {
+            for (int x = -snowPatchRadius; x <= snowPatchRadius; x++) {
+                for (int z = -snowPatchRadius; z <= snowPatchRadius; z++) {
+                    for (int y = -snowPatchRadius; y <= snowPatchRadius; y++) {
                         Block iterativeBlock = startBlock.getRelative(x, y, z);
-                        // Gives us that nice circular shape
-                        if (iterativeBlock.getLocation().distance(startLoc) > radius) continue;
+                        // Gives us that nice round shape
+                        if (iterativeBlock.getLocation().distance(hitLoc) >= snowPatchRadius) continue;
 
                         Material iterativeType = iterativeBlock.getType();
 
                         if (iterativeType.isAir()) {
                             if (iterativeBlock.getRelative(BlockFace.DOWN).getType().isSolid()) {
-                                iterativeBlock.setType(Material.SNOW);
+                                iterativeBlock.setType(Material.SNOW, false);
+                            }
+                            continue;
+                        }
+
+                        if (addSnowLayer && iterativeType.equals(Material.SNOW)) {
+                            Snow snow = (Snow) iterativeBlock.getBlockData();
+                            final int layers = snow.getLayers();
+                            if (layers < snow.getMaximumLayers() - 1) {
+                                snow.setLayers(layers + 1);
+                                iterativeBlock.setBlockData(snow);
+                            } else {
+                                // If only one or no more layers left to add, turn into snow block.
+                                iterativeBlock.setType(powderSnowEnabled ? powderedSnow : Material.SNOW_BLOCK, false);
                             }
                             continue;
                         }
 
                         if (formIce && iterativeType.equals(Material.WATER)) {
-                            iterativeBlock.setType(Material.ICE);
-                            continue;
-                        }
-
-                        if (addSnowLayer) {
-                            if (iterativeType.equals(Material.SNOW)) {
-                                Snow snow = (Snow) iterativeBlock.getBlockData();
-                                final int layers = snow.getLayers();
-                                if (layers < snow.getMaximumLayers()) {
-                                    snow.setLayers(layers + 1);
-                                    iterativeBlock.setBlockData(snow);
-                                }
-                                continue;
-                            }
-
-                            if (iterativeType.equals(Material.SNOW_BLOCK)) {
-                                Block oneUp = iterativeBlock.getRelative(BlockFace.UP);
-                                if (oneUp.getType().isAir()) {
-                                    oneUp.setType(Material.SNOW);
-                                }
-                            }
+                            iterativeBlock.setType(Material.ICE, false);
                         }
                     }
                 }
             }
-        }, 50L, TimeUnit.MILLISECONDS);
+        }, 1L);
     }
 }

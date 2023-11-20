@@ -1,13 +1,17 @@
 package me.xginko.snowballfight.modules;
 
-import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
+import com.tcoded.folialib.FoliaLib;
+import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.util.Vector;
 
 import java.util.HashSet;
@@ -15,15 +19,20 @@ import java.util.List;
 
 public class KnockbackOnHit implements SnowballModule, Listener {
 
+    private final ServerImplementation scheduler;
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
-    private final Vector accVectorModifier;
-    private final boolean onlyForSpecificEntities, asBlacklist;
+    private final Vector vectorModifier;
+    private final boolean isFolia, modifyVector, onlyForSpecificEntities, asBlacklist;
 
     protected KnockbackOnHit() {
         shouldEnable();
+        FoliaLib foliaLib = SnowballFight.getFoliaLib();
+        this.isFolia = foliaLib.isFolia();
+        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.getConfiguration();
         config.master().addComment("settings.knockback", "Modify knockback values on snowball hit.");
-        this.accVectorModifier = new Vector(
+        this.modifyVector = config.getBoolean("settings.knockback.vector-modifier.enable", false);
+        this.vectorModifier = new Vector(
                 config.getDouble("settings.knockback.vector-modifier.x", 0.0),
                 config.getDouble("settings.knockback.vector-modifier.y", 3.0),
                 config.getDouble("settings.knockback.vector-modifier.z", 0.0)
@@ -63,10 +72,17 @@ public class KnockbackOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onKnockbackBySnowball(EntityKnockbackByEntityEvent event) {
-        if (!event.getHitBy().getType().equals(EntityType.SNOWBALL)) return;
-        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(event.getEntity().getType()))) return;
+    private void onSnowballHit(ProjectileHitEvent event) {
+        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        final Projectile snowball = event.getEntity();
+        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(snowball.getType()))) return;
+        final Entity hitEntity = event.getHitEntity();
+        if (hitEntity == null) return;
 
-        event.getAcceleration().add(accVectorModifier);
+        if (isFolia) {
+            scheduler.runAtEntity(hitEntity, knockback -> hitEntity.setVelocity(modifyVector ? snowball.getVelocity().add(vectorModifier) : snowball.getVelocity()));
+        } else {
+            hitEntity.setVelocity(modifyVector ? snowball.getVelocity().add(vectorModifier) : snowball.getVelocity());
+        }
     }
 }
