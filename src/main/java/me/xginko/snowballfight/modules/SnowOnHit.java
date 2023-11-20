@@ -93,17 +93,17 @@ public class SnowOnHit implements SnowballModule, Listener {
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
             // Assume snow position is this block +=y
-            snow(hitBlock.getRelative(BlockFace.UP));
+            coverWithSnowAt(hitBlock.getRelative(BlockFace.UP));
             return;
         }
 
         if (hitEntity != null) {
             // Assume snow position is this.blockPos.+=y
-            snow(hitEntity.getLocation().toBlockLocation().add(0,1,0).getBlock());
+            coverWithSnowAt(hitEntity.getLocation().toBlockLocation().add(0,1,0).getBlock());
         }
     }
 
-    private void snow(Block startBlock) {
+    private void coverWithSnowAt(Block startBlock) {
         final Location startLoc = startBlock.getLocation();
         scheduler.runAtLocationLater(startLoc, snowDown -> {
             for (int x = -2-radius; x <= radius+2; x++) {
