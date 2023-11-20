@@ -1,6 +1,6 @@
 # SnowballFight
 ### Make snowball fights more fun and engaging. 
-#### For minecraft servers running paper 1.16.5 - 1.20.2.
+#### For minecraft servers running paper & folia 1.16.5 - 1.20.2.
 #
 
 SnowballFight aims to be a highly configurable and performant winter event plugin by enabling you to add various features to Snowballs, such as:
