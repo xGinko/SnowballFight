@@ -52,12 +52,12 @@ public class SnowOnHit implements SnowballModule, Listener {
             config.master().set("settings.snow.use-powder-snow", false);
         }
         this.onlyForEntities = config.getBoolean("settings.snow.only-for-entities", false,
-                "Enable if you only want explosions to happen when snowballs hit an entity.");
+                "Enable if you only want snow to spread when snowballs hit an entity.");
         this.onlyForSpecificEntities = config.getBoolean("settings.snow.only-for-specific-entities", false, """
-                When enabled, snowballs will only explode for the configured entity types below.\s
+                When enabled, snowballs will only spread snow for the configured entity types below.\s
                 Needs only-for-entities to be set to true.""");
         this.asBlacklist = config.getBoolean("settings.snow.use-list-as-blacklist", false, """
-                Setting this and only-for-specific-entities to true will mean there won't be an explosion\s
+                Setting this and only-for-specific-entities to true will mean there won't be snow spreading\s
                 when one of the configured entities are hit by a snowball.""");
         config.getList("settings.snow.specific-entity-types",
                 List.of(EntityType.PLAYER.name(), EntityType.WITHER.name()),
