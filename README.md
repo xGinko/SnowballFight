@@ -5,7 +5,7 @@
 
 
 ### Description
-SnowballFight aims to be a highly configurable and performant winter event plugin by enabling you to add various features to Snowballs, such as:
+SnowballFight aims to be a highly configurable winter event plugin adding various features to snowballs in game:
 
 - snow spread effect when a snowball hits a player, entity or a block
 - explosions when a snowball hits a player, entity or a block
