@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>SnowballFight</name>
-    <description>Make snowballs fun and engaging during winter.</description>
+    <description>Make snowball fights fun and engaging.</description>
     <url>githhub.com/xGinko/SnowballFight</url>
 
     <properties>
