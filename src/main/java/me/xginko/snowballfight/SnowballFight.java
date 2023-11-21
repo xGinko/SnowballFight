@@ -28,8 +28,11 @@ public final class SnowballFight extends JavaPlugin {
         logger.info("       Snowball Fight       ");
         logger.info("       Made by xGinko       ");
         logger.info("                            ");
+        logger.info("Loading Config");
         reloadConfiguration();
+        logger.info("Registering Commands");
         getCommand("snowballs").setExecutor(new SnowballsCommand());
+        logger.info("Done.");
     }
 
     public void reloadConfiguration() {
