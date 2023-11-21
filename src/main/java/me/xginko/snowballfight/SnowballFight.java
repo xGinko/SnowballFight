@@ -18,7 +18,16 @@ public final class SnowballFight extends JavaPlugin {
     public void onEnable() {
         instance = this;
         logger = getLogger();
-
+        logger.info("                            ");
+        logger.info("           ██████           ");
+        logger.info("         ██████████         ");
+        logger.info("        ████████████        ");
+        logger.info("         ██████████         ");
+        logger.info("           ██████           ");
+        logger.info("                            ");
+        logger.info("       Snowball Fight       ");
+        logger.info("       Made by xGinko       ");
+        logger.info("                            ");
         reloadConfiguration();
         getCommand("snowballs").setExecutor(new SnowballsCommand());
     }
