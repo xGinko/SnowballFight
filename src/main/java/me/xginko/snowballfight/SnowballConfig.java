@@ -14,7 +14,7 @@ import java.util.Random;
 public class SnowballConfig {
 
     private final @NotNull ConfigFile config;
-    public final @NotNull List<Color> colors = new ArrayList<>();
+    private final @NotNull List<Color> colors = new ArrayList<>();
     public final int cacheKeepSeconds;
 
     protected SnowballConfig() throws Exception {
