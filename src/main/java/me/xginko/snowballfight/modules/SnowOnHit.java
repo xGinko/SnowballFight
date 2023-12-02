@@ -26,14 +26,12 @@ public class SnowOnHit implements SnowballModule, Listener {
     private final HashSet<EntityType> configuredTypes = new HashSet<>();
     private final Material powderedSnow;
     private final int snowPatchRadius;
-    private final boolean isFolia, formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
+    private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
     private boolean powderSnowEnabled;
 
     protected SnowOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
+        this.scheduler = SnowballFight.getFoliaLib().getImpl();
         SnowballConfig config = SnowballFight.getConfiguration();
         config.master().addComment("settings.snow",
                 "\nCovers the hit block in snow.");
