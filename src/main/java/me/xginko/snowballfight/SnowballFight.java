@@ -80,7 +80,7 @@ public final class SnowballFight extends JavaPlugin {
     public void reloadConfiguration() {
         try {
             config = new SnowballConfig();
-            cache = new SnowballCache(config.cacheKeepSeconds);
+            cache = new SnowballCache(config.cacheDuration);
             SnowballModule.reloadModules();
             config.saveConfig();
         } catch (Throwable e) {

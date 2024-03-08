@@ -1,12 +1,10 @@
-package me.xginko.snowballfight.models;
+package me.xginko.snowballfight;
 
-import me.xginko.snowballfight.SnowballConfig;
-import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Color;
 import org.bukkit.entity.Snowball;
 import org.jetbrains.annotations.NotNull;
 
-public class WrappedSnowball {
+public final class WrappedSnowball {
 
     private final @NotNull Snowball snowball;
     private @NotNull Color primaryColor, secondaryColor;

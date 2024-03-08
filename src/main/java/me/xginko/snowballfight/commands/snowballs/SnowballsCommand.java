@@ -4,7 +4,7 @@ import me.xginko.snowballfight.commands.SubCommand;
 import me.xginko.snowballfight.commands.snowballs.subcommands.DisableSubCmd;
 import me.xginko.snowballfight.commands.snowballs.subcommands.ReloadSubCmd;
 import me.xginko.snowballfight.commands.snowballs.subcommands.VersionSubCmd;
-import me.xginko.snowballfight.utils.KyoriUtil;
+import me.xginko.snowballfight.adventure.KyoriUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;

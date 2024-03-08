@@ -2,7 +2,6 @@ package me.xginko.snowballfight;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import me.xginko.snowballfight.models.WrappedSnowball;
 import org.bukkit.entity.Snowball;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,8 +13,8 @@ public final class SnowballCache {
 
     private final @NotNull Cache<UUID, WrappedSnowball> cache;
 
-    SnowballCache(long expireAfterWriteSeconds) {
-        this.cache = Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(expireAfterWriteSeconds)).build();
+    SnowballCache(Duration cacheDuration) {
+        this.cache = Caffeine.newBuilder().expireAfterWrite(cacheDuration).build();
     }
 
     public @NotNull ConcurrentMap<UUID, WrappedSnowball> cacheMap() {

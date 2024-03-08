@@ -5,6 +5,7 @@ import org.bukkit.Color;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -14,9 +15,9 @@ public final class SnowballConfig {
 
     private final @NotNull ConfigFile configFile;
     public final @NotNull List<Color> colors;
-    public final int cacheKeepSeconds;
+    public final @NotNull Duration cacheDuration;
 
-    protected SnowballConfig() throws Exception {
+    SnowballConfig() throws Exception {
         // Create plugin folder first if it does not exist yet
         File pluginFolder = SnowballFight.getInstance().getDataFolder();
         if (!pluginFolder.exists() && !pluginFolder.mkdir())
@@ -24,8 +25,8 @@ public final class SnowballConfig {
         // Load config.yml with ConfigMaster
         this.configFile = ConfigFile.loadConfig(new File(pluginFolder, "config.yml"));
 
-        this.cacheKeepSeconds = getInt("settings.cache-keep-seconds", 20,
-                "Don't touch unless you know what you're doing.");
+        this.cacheDuration = Duration.ofSeconds(getInt("settings.cache-keep-seconds", 20,
+                "Don't touch unless you know what you're doing."));
 
         final List<String> defaults = Arrays.asList(
                 "B3E3F4",   // Snowy Dark Sky
@@ -37,7 +38,7 @@ public final class SnowballConfig {
                 "407794"    // Evening slightly red sun snow shadow but more blue
         );
         this.colors = getList("settings.colors", defaults,
-                "You need to configure at least 1 color. Format: B3E3F4 or #B3E3F4")
+                "You need to configure at least 1 color. Format: 'B3E3F4' or '#B3E3F4'")
                 .stream()
                 .distinct()
                 .map(hexString -> {

@@ -6,7 +6,7 @@ import com.tcoded.folialib.wrapper.task.WrappedTask;
 import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.models.WrappedSnowball;
+import me.xginko.snowballfight.WrappedSnowball;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.EntityType;

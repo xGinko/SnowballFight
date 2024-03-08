@@ -2,10 +2,9 @@ name: SnowballFight
 version: '${project.version}'
 main: me.xginko.snowballfight.SnowballFight
 api-version: '1.16'
-load: STARTUP
-authors: [xGinko]
-description: ${project.description}
-website: ${project.url}
+authors: [ xGinko ]
+description: '${project.description}'
+website: '${project.url}'
 folia-supported: true
 
 commands:

@@ -8,7 +8,7 @@ import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.models.WrappedSnowball;
+import me.xginko.snowballfight.WrappedSnowball;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
