@@ -19,6 +19,7 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class TrailsWhenThrown implements SnowballModule, Listener {
 
@@ -26,7 +27,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     private final SnowballCache snowballCache;
     private final HashMap<UUID, WrappedTask> particleTrails = new HashMap<>();
     private final int particlesPerTick;
-    private final long maxTrailTaskAliveTime;
+    private final long maxTrailTaskAliveTime, initialDelay, period;
 
     protected TrailsWhenThrown() {
         shouldEnable();
@@ -36,8 +37,14 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
         config.master().addComment("settings.trails", "\nSpawn colored particle trails when a snowball is launched.");
         this.particlesPerTick = config.getInt("settings.trails.particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low.");
-        this.maxTrailTaskAliveTime = config.getInt("settings.trails.max-trail-task-alive-time-seconds", 20,
-                "How many seconds until the trails will no longer be generated on the same snowball to save resources.") * 1000L;
+        this.maxTrailTaskAliveTime = TimeUnit.SECONDS.toMillis(config.getInt("settings.trails.max-trail-task-alive-time-seconds", 20,
+                "How many seconds until the trails will no longer be generated on the same snowball to save resources."));
+        this.initialDelay = Math.max(1, config.getInt("settings.trails.initial-delay-ticks", 3,
+                "Time in ticks after throwing snowball until trails should begin to generate." +
+                "Recommended: At least 2 ticks delay so the particles don't obstruct the players view."));
+        this.period = Math.max(1, config.getInt("settings.trails.repeat-delay-ticks", 1,
+                "How often per tick a particle should be spawned.\n" +
+                "Recommended: 1 tick delay to get the best looking trails."));
     }
 
     @Override
@@ -90,7 +97,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
                         if (trails != null) trails.cancel();
                         particleTrails.remove(snowballUUID);
                     }
-                }, 1L, 1L) // 1 Tick start delay because folia, 1 Tick execute delay to get the best looking trails
+                }, initialDelay, period)
         );
     }
 }
