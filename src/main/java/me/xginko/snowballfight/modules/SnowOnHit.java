@@ -1,6 +1,5 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
@@ -17,13 +16,15 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class SnowOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes = new HashSet<>();
+    private final HashSet<EntityType> configuredTypes;
     private final Material powderedSnow;
     private final int snowPatchRadius;
     private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
@@ -48,29 +49,31 @@ public class SnowOnHit implements SnowballModule, Listener {
                 "Of course only works if your minecraft version has powder snow.");
         if (powderSnowEnabled && powderedSnow == null) {
             powderSnowEnabled = false;
-            SnowballFight.getLog().warning("(Snow) Your server version does not support powder snow. Using regular snow.");
+            SnowballFight.getLog().warn("(Snow) Your server version does not support powder snow. Using regular snow.");
             config.master().set("settings.snow.stack-snow-layer.full-layers.use-powder-snow", false);
         }
         this.onlyForEntities = config.getBoolean("settings.snow.only-for-entities", false,
                 "Enable if you only want snow to spread when snowballs hit an entity.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.snow.only-for-specific-entities", false, """
-                When enabled, snowballs will only spread snow for the configured entity types below.\s
-                Needs only-for-entities to be set to true.""");
-        this.asBlacklist = config.getBoolean("settings.snow.use-list-as-blacklist", false, """
-                Setting this and only-for-specific-entities to true will mean there won't be snow spreading\s
-                when one of the configured entities are hit by a snowball.""");
-        config.getList("settings.snow.specific-entity-types",
-                List.of(EntityType.PLAYER.name(), EntityType.WITHER.name()),
-                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
-        ).forEach(configuredType -> {
-            try {
-                EntityType type = EntityType.valueOf(configuredType);
-                this.configuredTypes.add(type);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("(Snow) Configured entity type '"+configuredType+"' not recognized. " +
-                        "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
-            }
-        });
+        this.onlyForSpecificEntities = config.getBoolean("settings.snow.only-for-specific-entities", false, 
+                "When enabled, snowballs will only spread snow for the configured entity types below.\n" +
+                "Needs only-for-entities to be set to true.");
+        this.asBlacklist = config.getBoolean("settings.snow.use-list-as-blacklist", false, 
+                "Setting this and only-for-specific-entities to true will mean there won't be snow spreading\n" +
+                "when one of the configured entities are hit by a snowball.");
+        this.configuredTypes = config.getList("settings.snow.specific-entity-types", Arrays.asList("PLAYER", "WITHER"),
+                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
+                .stream()
+                .map(configuredType -> {
+                    try {
+                        return EntityType.valueOf(configuredType);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("(Snow) Configured entity type '"+configuredType+"' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override

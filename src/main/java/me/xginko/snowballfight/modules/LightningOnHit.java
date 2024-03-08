@@ -15,14 +15,15 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class LightningOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes = new HashSet<>();
+    private final HashSet<EntityType> configuredTypes;
     private final double probability;
     private final int strikeAmount, flashCount;
     private final boolean isFolia, dealDamage, onlyForEntities, onlyForSpecificEntities, asBlacklist;
@@ -45,23 +46,25 @@ public class LightningOnHit implements SnowballModule, Listener {
                 "Percentage as double: 100% = 1.0");
         this.onlyForEntities = config.getBoolean("settings.lightning.only-for-entities", false,
                 "Enable if you only want explosions to happen when snowballs hit an entity.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.lightning.only-for-specific-entities", false, """
-                When enabled, only entities in this list will be struck by lightning when hit by a snowball.\s
-                Needs only-for-entities to be set to true.""");
+        this.onlyForSpecificEntities = config.getBoolean("settings.lightning.only-for-specific-entities", false,
+                "When enabled, only entities in this list will be struck by lightning when hit by a snowball.\n" +
+                "Needs only-for-entities to be set to true.");
         this.asBlacklist = config.getBoolean("settings.lightning.use-list-as-blacklist", false,
                 "All entities except the ones on this list will get struck by lightning if set to true.");
-        config.getList("settings.lightning.specific-entity-types",
-                List.of(EntityType.PLAYER.name()),
-                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
-        ).forEach(configuredType -> {
-            try {
-                EntityType type = EntityType.valueOf(configuredType);
-                this.configuredTypes.add(type);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("(Lightning) Configured entity type '"+configuredType+"' not recognized. " +
-                        "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
-            }
-        });
+        this.configuredTypes = config.getList("settings.lightning.specific-entity-types", Collections.singletonList("PLAYER"),
+                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
+                .stream()
+                .map(configuredType -> {
+                    try {
+                        return EntityType.valueOf(configuredType);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("(Lightning) Configured entity type '"+configuredType+"' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override
@@ -83,7 +86,7 @@ public class LightningOnHit implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        if (probability < 1.0 && new Random().nextDouble() > probability) return;
+        if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;
 
         final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {

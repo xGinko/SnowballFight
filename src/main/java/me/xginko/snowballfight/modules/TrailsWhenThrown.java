@@ -54,6 +54,8 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     @Override
     public void disable() {
         HandlerList.unregisterAll(this);
+        this.particleTrails.values().forEach(WrappedTask::cancel);
+        this.particleTrails.clear();
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

@@ -1,7 +1,9 @@
 package me.xginko.snowballfight.commands.snowballs.subcommands;
 
+import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.commands.SubCommand;
 import me.xginko.snowballfight.modules.SnowballModule;
+import me.xginko.snowballfight.utils.KyoriUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -28,11 +30,13 @@ public class DisableSubCmd extends SubCommand {
     public void perform(CommandSender sender, String[] args) {
         if (!sender.hasPermission("snowballfight.cmd.disable")) return;
 
-        sender.sendMessage(Component.text("Disabling SnowballFight...").color(NamedTextColor.RED));
+        KyoriUtil.sendMessage(sender, Component.text("Disabling SnowballFight...").color(NamedTextColor.RED));
+
         SnowballModule.modules.forEach(SnowballModule::disable);
         SnowballModule.modules.clear();
+        SnowballFight.getCache().cacheMap().clear();
 
-        sender.sendMessage(Component.text("Disabled all plugin listeners and tasks.").color(NamedTextColor.GREEN));
-        sender.sendMessage(Component.text("You can enable the plugin again using the reload command.").color(NamedTextColor.GRAY));
+        KyoriUtil.sendMessage(sender, Component.text("Disabled all plugin listeners and tasks.").color(NamedTextColor.GREEN));
+        KyoriUtil.sendMessage(sender, Component.text("You can enable the plugin again using the reload command.").color(NamedTextColor.GRAY));
     }
 }

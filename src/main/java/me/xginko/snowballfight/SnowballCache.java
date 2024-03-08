@@ -3,10 +3,8 @@ package me.xginko.snowballfight;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import me.xginko.snowballfight.models.WrappedSnowball;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Snowball;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -22,11 +20,6 @@ public final class SnowballCache {
 
     public @NotNull ConcurrentMap<UUID, WrappedSnowball> cacheMap() {
         return this.cache.asMap();
-    }
-
-    public @Nullable WrappedSnowball get(@NotNull UUID uuid) {
-        WrappedSnowball wrappedSnowball = this.cache.getIfPresent(uuid);
-        return wrappedSnowball == null && Bukkit.getEntity(uuid) instanceof Snowball snowball ? this.add(snowball) : wrappedSnowball;
     }
 
     public @NotNull WrappedSnowball getOrAdd(@NotNull Snowball snowball) {

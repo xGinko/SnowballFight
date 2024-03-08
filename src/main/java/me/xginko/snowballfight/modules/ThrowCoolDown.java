@@ -21,8 +21,7 @@ import java.util.UUID;
 
 public class ThrowCoolDown implements SnowballModule, Listener {
 
-    private final Cache<UUID, Boolean> player_cooldowns;
-    private final Cache<UUID, Boolean> entity_cooldowns;
+    private final Cache<UUID, Boolean> player_cooldowns, entity_cooldowns;
     private final Cache<Location, Boolean> block_cooldowns;
     private final boolean blockCooldownEnabled, entityCooldownEnabled;
 
@@ -31,17 +30,17 @@ public class ThrowCoolDown implements SnowballModule, Listener {
         SnowballConfig config = SnowballFight.getConfiguration();
         config.master().addComment("settings.cooldown",
                 "Configure a cooldown delay between throwing snowballs for players.");
-        this.player_cooldowns = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(config.getInt("settings.cooldown.player-delay-in-ticks", 10) * 50L))
-                .build();
+        this.player_cooldowns = Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
+                Math.max(1, config.getInt("settings.cooldown.player-delay-in-ticks", 10) * 50L)
+        )).build();
         this.entityCooldownEnabled = config.getBoolean("settings.cooldown.entities.enable", false);
-        this.entity_cooldowns = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(config.getInt("settings.cooldown.entities.delay-in-ticks", 10) * 50L))
-                .build();
+        this.entity_cooldowns = Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
+                Math.max(1, config.getInt("settings.cooldown.entities.delay-in-ticks", 10) * 50L)
+        )).build();
         this.blockCooldownEnabled = config.getBoolean("settings.cooldown.blocks.enable", false);
-        this.block_cooldowns = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(config.getInt("settings.cooldown.blocks.delay-in-ticks", 20) * 50L))
-                .build();
+        this.block_cooldowns = Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
+                Math.max(1, config.getInt("settings.cooldown.blocks.delay-in-ticks", 20) * 50L)
+        )).build();
     }
 
     @Override
@@ -80,7 +79,8 @@ public class ThrowCoolDown implements SnowballModule, Listener {
 
         final ProjectileSource shooter = event.getEntity().getShooter();
 
-        if (entityCooldownEnabled && shooter instanceof LivingEntity livingShooter) {
+        if (entityCooldownEnabled && shooter instanceof LivingEntity) {
+            LivingEntity livingShooter = (LivingEntity) shooter;
             if (livingShooter.getType().equals(EntityType.PLAYER)) return; // Players in a different event due to item consumption.
             final UUID entityUniqueId = livingShooter.getUniqueId();
             if (entity_cooldowns.getIfPresent(entityUniqueId) != null) event.setCancelled(true);
@@ -88,7 +88,8 @@ public class ThrowCoolDown implements SnowballModule, Listener {
             return;
         }
 
-        if (blockCooldownEnabled && shooter instanceof BlockProjectileSource blockShooter) {
+        if (blockCooldownEnabled && shooter instanceof BlockProjectileSource) {
+            BlockProjectileSource blockShooter = (BlockProjectileSource) shooter;
             final Location blockLocation = blockShooter.getBlock().getLocation();
             if (block_cooldowns.getIfPresent(blockLocation) != null) event.setCancelled(true);
             else block_cooldowns.put(blockLocation, true);

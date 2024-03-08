@@ -6,20 +6,21 @@ import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class DamageOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes = new HashSet<>();
+    private final HashSet<EntityType> configuredTypes;
     private final double damage;
     private final boolean isFolia, onlyForSpecificEntities, asBlacklist;
 
@@ -36,18 +37,20 @@ public class DamageOnHit implements SnowballModule, Listener {
                 "When enabled, only configured entities will take extra damage when hit by a snowball.");
         this.asBlacklist = config.getBoolean("settings.damage.use-list-as-blacklist", false,
                 "All entities except the ones on this list will take damage when hit by a snowball if set to true.");
-        config.getList("settings.damage.specific-entity-types",
-                List.of(EntityType.PLAYER.name()),
-                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
-        ).forEach(configuredType -> {
-            try {
-                EntityType type = EntityType.valueOf(configuredType);
-                this.configuredTypes.add(type);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("(Damage) Configured entity type '"+configuredType+"' not recognized. " +
-                        "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
-            }
-        });
+        this.configuredTypes = config.getList("settings.damage.specific-entity-types", Collections.singletonList("PLAYER"),
+                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
+                .stream()
+                .map(configuredType -> {
+                    try {
+                        return EntityType.valueOf(configuredType);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("(Damage) Configured entity type '"+configuredType+"' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override
@@ -66,17 +69,18 @@ public class DamageOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll();
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        if (!(event.getHitEntity() instanceof LivingEntity living)) return;
+        if (!(event.getHitEntity() instanceof LivingEntity)) return;
+
+        final LivingEntity living = (LivingEntity) event.getHitEntity();
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
 
-        final Projectile snowball = event.getEntity();
         if (isFolia) {
-            scheduler.runAtEntity(living, dmg -> living.damage(damage, snowball));
+            scheduler.runAtEntity(living, dmg -> living.damage(damage, event.getEntity()));
         } else {
-            living.damage(damage, snowball);
+            living.damage(damage, event.getEntity());
         }
     }
 }

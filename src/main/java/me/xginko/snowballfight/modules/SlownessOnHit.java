@@ -14,14 +14,13 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SlownessOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes = new HashSet<>();
+    private final HashSet<EntityType> configuredTypes;
     private final double probability;
     private final int duration, amplifier;
     private final boolean isFolia, onlyForSpecificEntities, asBlacklist;
@@ -43,18 +42,20 @@ public class SlownessOnHit implements SnowballModule, Listener {
                 "When enabled, only configured entities will be slowed when hit by a snowball.");
         this.asBlacklist = config.getBoolean("settings.slowness.use-list-as-blacklist", false,
                 "All entities except the ones on this list will be slowed when hit by a snowball if set to true.");
-        config.getList("settings.slowness.specific-entity-types",
-                List.of(EntityType.PLAYER.name()),
-                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
-        ).forEach(configuredType -> {
-            try {
-                EntityType type = EntityType.valueOf(configuredType);
-                this.configuredTypes.add(type);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("(Slowness) Configured entity type '"+configuredType+"' not recognized. " +
-                        "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
-            }
-        });
+        this.configuredTypes = config.getList("settings.slowness.specific-entity-types", Collections.singletonList("PLAYER"),
+                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
+                .stream()
+                .map(configuredType -> {
+                    try {
+                        return EntityType.valueOf(configuredType);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("(Slowness) Configured entity type '"+configuredType+"' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override
@@ -76,7 +77,9 @@ public class SlownessOnHit implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        if (!(event.getHitEntity() instanceof LivingEntity living)) return;
+        if (!(event.getHitEntity() instanceof LivingEntity)) return;
+
+        final LivingEntity living = (LivingEntity) event.getHitEntity();
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
         if (probability < 1.0 && new Random().nextDouble() > probability) return;
 

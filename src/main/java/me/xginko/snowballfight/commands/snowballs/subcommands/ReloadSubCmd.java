@@ -2,6 +2,7 @@ package me.xginko.snowballfight.commands.snowballs.subcommands;
 
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.commands.SubCommand;
+import me.xginko.snowballfight.utils.KyoriUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -27,10 +28,11 @@ public class ReloadSubCmd extends SubCommand {
     @Override
     public void perform(CommandSender sender, String[] args) {
         if (!sender.hasPermission("snowballfight.cmd.reload")) return;
-        sender.sendMessage(Component.text("Reloading SnowballFight...").color(NamedTextColor.WHITE));
-        SnowballFight.getFoliaLib().getImpl().runAsync(reload -> {
+
+        KyoriUtil.sendMessage(sender, Component.text("Reloading SnowballFight...").color(NamedTextColor.WHITE));
+        SnowballFight.getFoliaLib().getImpl().runNextTick(reload -> {
             SnowballFight.getInstance().reloadConfiguration();
-            sender.sendMessage(Component.text("Reload complete.").color(NamedTextColor.GREEN));
+            KyoriUtil.sendMessage(sender, Component.text("Reload complete.").color(NamedTextColor.GREEN));
         });
     }
 }

@@ -14,13 +14,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.util.Vector;
 
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class KnockbackOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes = new HashSet<>();
+    private final HashSet<EntityType> configuredTypes;
     private final Vector vectorModifier;
     private final double multiplier;
     private final boolean isFolia, modifyVector, onlyForSpecificEntities, asBlacklist;
@@ -44,18 +46,20 @@ public class KnockbackOnHit implements SnowballModule, Listener {
                 "When enabled, only configured entities will be knocked back by snowballs.");
         this.asBlacklist = config.getBoolean("settings.knockback.use-list-as-blacklist", false,
                 "All entities except the ones on this list will be knocked back by snowballs if set to true.");
-        config.getList("settings.knockback.specific-entity-types",
-                List.of(EntityType.PLAYER.name()),
-                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
-        ).forEach(configuredType -> {
-            try {
-                EntityType type = EntityType.valueOf(configuredType);
-                this.configuredTypes.add(type);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("(Knockback) Configured entity type '"+configuredType+"' not recognized. " +
-                        "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
-            }
-        });
+        this.configuredTypes = config.getList("settings.knockback.specific-entity-types", Collections.singletonList("PLAYER"),
+                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
+                .stream()
+                .map(configuredType -> {
+                    try {
+                        return EntityType.valueOf(configuredType);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("(Knockback) Configured entity type '"+configuredType+"' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override

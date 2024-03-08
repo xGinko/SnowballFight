@@ -2,7 +2,6 @@ package me.xginko.snowballfight.events;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -21,7 +20,7 @@ public class PostSnowballExplodeEvent extends Event {
 
     public PostSnowballExplodeEvent(
             @NotNull Snowball snowball, @Nullable Entity hitEntity, @NotNull Location location,
-            float power, boolean setFire, boolean breakBlocks, boolean isAsync
+            float power, boolean setFire, boolean breakBlocks, boolean hasExploded , boolean isAsync
     ) {
         super(isAsync);
         this.snowball = snowball;
@@ -30,11 +29,7 @@ public class PostSnowballExplodeEvent extends Event {
         this.location = power;
         this.setFire = setFire;
         this.breakBlocks = breakBlocks;
-        this.hasExploded = location.getWorld().createExplosion(
-                // Set explode source for damage tracking
-                snowball.getShooter() instanceof LivingEntity living ? living : snowball,
-                location, power, setFire, breakBlocks
-        );
+        this.hasExploded = hasExploded;
     }
 
     public @NotNull Snowball getSnowball() {

@@ -1,141 +1,161 @@
 package me.xginko.snowballfight;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Color;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class SnowballConfig {
+public final class SnowballConfig {
 
-    private final @NotNull ConfigFile config;
-    private final @NotNull List<Color> colors = new ArrayList<>();
+    private final @NotNull ConfigFile configFile;
+    public final @NotNull List<Color> colors;
     public final int cacheKeepSeconds;
 
     protected SnowballConfig() throws Exception {
-        this.config = loadConfig(new File(SnowballFight.getInstance().getDataFolder(), "config.yml"));
-        this.cacheKeepSeconds = getInt("settings.cache-keep-seconds", 20, "\nDon't touch unless you know what you're doing.");
-        final MiniMessage miniMessage = MiniMessage.miniMessage();
-        final List<String> defaults = List.of(
-                "<color:#B3E3F4>",   // Snowy Dark Sky
-                "<color:#B5E5E7>",   // Early Winter Snow White slightly Blue
-                "<color:#71C3DB>",   // Wet Snow Blue White
-                "<color:#9BDBFF>",   // Mid Winter White slightly more Blue
-                "<color:#E8EBF0>",   // Frost on thin twigs White
-                "<color:#59B1BD>",   // Mid day snow shadow blue
-                "<color:#407794>"    // Evening slightly red sun snow shadow but more blue
+        // Create plugin folder first if it does not exist yet
+        File pluginFolder = SnowballFight.getInstance().getDataFolder();
+        if (!pluginFolder.exists() && !pluginFolder.mkdir())
+            SnowballFight.getLog().error("Failed to create plugin folder.");
+        // Load config.yml with ConfigMaster
+        this.configFile = ConfigFile.loadConfig(new File(pluginFolder, "config.yml"));
+
+        this.cacheKeepSeconds = getInt("settings.cache-keep-seconds", 20,
+                "Don't touch unless you know what you're doing.");
+
+        final List<String> defaults = Arrays.asList(
+                "B3E3F4",   // Snowy Dark Sky
+                "B5E5E7",   // Early Winter Snow White slightly Blue
+                "71C3DB",   // Wet Snow Blue White
+                "9BDBFF",   // Midwinter White slightly more Blue
+                "E8EBF0",   // Frost on thin twigs White
+                "59B1BD",   // Midday snow shadow blue
+                "407794"    // Evening slightly red sun snow shadow but more blue
         );
-        List<String> configuredColors = getList("settings.colors", defaults, "\nYou need to configure at least 2 colors.");
-        if (configuredColors.size() < 2) {
-            SnowballFight.getLog().severe("You need to configure at least 2 colors. Resetting to default colors.");
-            config.set("settings.colors", defaults);
-            configuredColors = defaults; // Simple workaround as the new config list needs to be updated again after config.set to not stay invalid.
+        this.colors = getList("settings.colors", defaults,
+                "You need to configure at least 1 color. Format: B3E3F4 or #B3E3F4")
+                .stream()
+                .distinct()
+                .map(hexString -> {
+                    try {
+                        final String parseable = hexString.replace("#", "");
+                        return Color.fromRGB(
+                                Integer.parseInt(parseable.substring(0, 2), 16),
+                                Integer.parseInt(parseable.substring(2, 4), 16),
+                                Integer.parseInt(parseable.substring(4, 6), 16)
+                        );
+                    } catch (NumberFormatException e) {
+                        SnowballFight.getLog().warn("Could not parse color '" + hexString + "'. Is it formatted correctly?");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        if (colors.isEmpty()) {
+            colors.addAll(defaults.stream()
+                    .map(string -> {
+                        try {
+                            return Color.fromRGB(
+                                    Integer.parseInt(string.substring(0, 2), 16),
+                                    Integer.parseInt(string.substring(2, 4), 16),
+                                    Integer.parseInt(string.substring(4, 6), 16));
+                        } catch (Exception e) {
+                            return Color.WHITE;
+                        }
+                    })
+                    .collect(Collectors.toList()));
         }
-        configuredColors.forEach(serializedColor -> {
-            final TextColor textColor = miniMessage.deserialize(serializedColor).color();
-            if (textColor != null) this.colors.add(Color.fromRGB(textColor.red(), textColor.green(), textColor.blue()));
-            else SnowballFight.getLog().warning("Color '" + serializedColor + "' is not formatted properly. Use the following format: <color:#FFFFFF>");
-        });
+
         structure();
     }
 
-    private ConfigFile loadConfig(File ymlFile) throws Exception {
-        File parent = new File(ymlFile.getParent());
-        if (!parent.exists() && !parent.mkdir()) SnowballFight.getLog().severe("Unable to create plugin config directory.");
-        if (!ymlFile.exists()) ymlFile.createNewFile();
-        return ConfigFile.loadConfig(ymlFile);
-    }
-
     public void structure() {
-        config.addDefault("settings.cooldown", null);
-        config.addDefault("settings.damage", null);
-        config.addDefault("settings.snow", null);
-        config.addDefault("settings.explosions", null);
-        config.addDefault("settings.trails", null);
-        config.addDefault("settings.fireworks", null);
-        config.addDefault("settings.lightning", null);
-        config.addDefault("settings.slowness", null);
-        config.addDefault("settings.levitation", null);
+        configFile.addDefault("settings.cooldown", null);
+        configFile.addDefault("settings.infinite-snowballs", null);
+        configFile.addDefault("settings.damage", null);
+        configFile.addDefault("settings.snow", null);
+        configFile.addDefault("settings.explosions", null);
+        configFile.addDefault("settings.trails", null);
+        configFile.addDefault("settings.fireworks", null);
+        configFile.addDefault("settings.lightning", null);
+        configFile.addDefault("settings.drop-armor", null);
+        configFile.addDefault("settings.slowness", null);
+        configFile.addDefault("settings.levitation", null);
     }
 
     public void saveConfig() {
         try {
-            config.save();
+            configFile.save();
         } catch (Exception e) {
-            SnowballFight.getLog().severe("Failed to save config file! - " + e.getLocalizedMessage());
+            SnowballFight.getLog().error("Failed to save config file!", e);
         }
     }
 
-    public Color getRandomColor() {
-        return this.colors.get(new Random().nextInt(this.colors.size()));
-    }
-
     public @NotNull ConfigFile master() {
-        return config;
+        return configFile;
     }
 
     public boolean getBoolean(@NotNull String path, boolean def) {
-        config.addDefault(path, def);
-        return config.getBoolean(path, def);
+        configFile.addDefault(path, def);
+        return configFile.getBoolean(path, def);
     }
 
     public boolean getBoolean(@NotNull String path, boolean def, @NotNull String comment) {
-        config.addDefault(path, def, comment);
-        return config.getBoolean(path, def);
+        configFile.addDefault(path, def, comment);
+        return configFile.getBoolean(path, def);
     }
 
     public int getInt(@NotNull String path, int def) {
-        config.addDefault(path, def);
-        return config.getInteger(path, def);
+        configFile.addDefault(path, def);
+        return configFile.getInteger(path, def);
     }
 
     public int getInt(@NotNull String path, int def, @NotNull String comment) {
-        config.addDefault(path, def, comment);
-        return config.getInteger(path, def);
+        configFile.addDefault(path, def, comment);
+        return configFile.getInteger(path, def);
     }
 
     public float getFloat(@NotNull String path, float def) {
-        config.addDefault(path, def);
-        return config.getFloat(path, def);
+        configFile.addDefault(path, def);
+        return configFile.getFloat(path, def);
     }
 
     public float getFloat(@NotNull String path, float def, @NotNull String comment) {
-        config.addDefault(path, def, comment);
-        return config.getFloat(path, def);
+        configFile.addDefault(path, def, comment);
+        return configFile.getFloat(path, def);
     }
 
     public double getDouble(@NotNull String path, double def) {
-        config.addDefault(path, def);
-        return config.getDouble(path, def);
+        configFile.addDefault(path, def);
+        return configFile.getDouble(path, def);
     }
 
     public double getDouble(@NotNull String path, double def, @NotNull String comment) {
-        config.addDefault(path, def, comment);
-        return config.getDouble(path, def);
+        configFile.addDefault(path, def, comment);
+        return configFile.getDouble(path, def);
     }
 
     public @NotNull String getString(@NotNull String path, @NotNull String def) {
-        config.addDefault(path, def);
-        return config.getString(path, def);
+        configFile.addDefault(path, def);
+        return configFile.getString(path, def);
     }
 
     public @NotNull String getString(@NotNull String path, @NotNull String def, @NotNull String comment) {
-        config.addDefault(path, def, comment);
-        return config.getString(path, def);
+        configFile.addDefault(path, def, comment);
+        return configFile.getString(path, def);
     }
 
     public @NotNull List<String> getList(@NotNull String path, @NotNull List<String> def) {
-        config.addDefault(path, def);
-        return config.getStringList(path);
+        configFile.addDefault(path, def);
+        return configFile.getStringList(path);
     }
 
     public @NotNull List<String> getList(@NotNull String path, @NotNull List<String> def, @NotNull String comment) {
-        config.addDefault(path, def, comment);
-        return config.getStringList(path);
+        configFile.addDefault(path, def, comment);
+        return configFile.getStringList(path);
     }
 }

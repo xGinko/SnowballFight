@@ -9,6 +9,7 @@ import me.xginko.snowballfight.events.PreSnowballExplodeEvent;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,13 +17,15 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ExplodeOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes = new HashSet<>();
+    private final HashSet<EntityType> configuredTypes;
     private final float explosionPower;
     private final boolean explosionSetFire, explosionBreakBlocks, onlyForEntities, onlyForSpecificEntities, asBlacklist, isFolia;
 
@@ -41,24 +44,26 @@ public class ExplodeOnHit implements SnowballModule, Listener {
                 "Enable destruction of nearby blocks.");
         this.onlyForEntities = config.getBoolean("settings.explosions.only-for-entities", false,
                 "Enable if you only want explosions to happen when snowballs hit an entity.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.explosions.only-for-specific-entities", false, """
-                When enabled, snowballs will only explode for the configured entity types below.\s
-                Needs only-for-entities to be set to true.""");
-        this.asBlacklist = config.getBoolean("settings.explosions.use-list-as-blacklist", false, """
-                Setting this and only-for-specific-entities to true will mean there won't be an explosion\s
-                when one of the configured entities are hit by a snowball.""");
-        config.getList("settings.explosions.specific-entity-types",
-                List.of(EntityType.PLAYER.name(), EntityType.WITHER.name()),
-                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
-        ).forEach(configuredType -> {
-            try {
-                EntityType type = EntityType.valueOf(configuredType);
-                this.configuredTypes.add(type);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("(Explosions) Configured entity type '"+configuredType+"' not recognized. " +
-                        "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
-            }
-        });
+        this.onlyForSpecificEntities = config.getBoolean("settings.explosions.only-for-specific-entities", false, 
+                "When enabled, snowballs will only explode for the configured entity types below.\n" +
+                "Needs only-for-entities to be set to true.");
+        this.asBlacklist = config.getBoolean("settings.explosions.use-list-as-blacklist", false, 
+                "Setting this and only-for-specific-entities to true will mean there won't be an explosion \n" +
+                "when one of the configured entities are hit by a snowball.");
+        this.configuredTypes = config.getList("settings.explosions.specific-entity-types", Arrays.asList("PLAYER", "WITHER"),
+                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
+                .stream()
+                .map(configuredType -> {
+                    try {
+                        return EntityType.valueOf(configuredType);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("(Explosions) Configured entity type '"+configuredType+"' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override
@@ -80,7 +85,9 @@ public class ExplodeOnHit implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+
         final Entity hitEntity = event.getHitEntity();
+
         if (onlyForEntities) {
             if (hitEntity == null) return;
             if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
@@ -98,8 +105,10 @@ public class ExplodeOnHit implements SnowballModule, Listener {
 
         if (!preSnowballExplodeEvent.callEvent()) return;
 
+        final Location explodeLoc = preSnowballExplodeEvent.getExplodeLocation();
+        final Snowball snowball = preSnowballExplodeEvent.getSnowball();
+
         if (isFolia) {
-            final Location explodeLoc = preSnowballExplodeEvent.getExplodeLocation();
             scheduler.runAtLocation(explodeLoc, snobol -> {
                 new PostSnowballExplodeEvent(
                         preSnowballExplodeEvent.getSnowball(),
@@ -108,6 +117,14 @@ public class ExplodeOnHit implements SnowballModule, Listener {
                         preSnowballExplodeEvent.getExplosionPower(),
                         preSnowballExplodeEvent.willSetFire(),
                         preSnowballExplodeEvent.willBreakBlocks(),
+                        explodeLoc.getWorld().createExplosion(
+                                // Set explode source for damage tracking
+                                snowball.getShooter() instanceof LivingEntity ? (LivingEntity) snowball.getShooter() : snowball,
+                                explodeLoc,
+                                preSnowballExplodeEvent.getExplosionPower(),
+                                preSnowballExplodeEvent.willSetFire(),
+                                preSnowballExplodeEvent.willBreakBlocks()
+                        ),
                         event.isAsynchronous()
                 ).callEvent();
             });
@@ -115,10 +132,17 @@ public class ExplodeOnHit implements SnowballModule, Listener {
             new PostSnowballExplodeEvent(
                     preSnowballExplodeEvent.getSnowball(),
                     preSnowballExplodeEvent.getHitEntity(),
-                    preSnowballExplodeEvent.getExplodeLocation(),
+                    explodeLoc,
                     preSnowballExplodeEvent.getExplosionPower(),
                     preSnowballExplodeEvent.willSetFire(),
                     preSnowballExplodeEvent.willBreakBlocks(),
+                    explodeLoc.getWorld().createExplosion(
+                            snowball.getShooter() instanceof LivingEntity ? (LivingEntity) snowball.getShooter() : snowball,
+                            explodeLoc,
+                            preSnowballExplodeEvent.getExplosionPower(),
+                            preSnowballExplodeEvent.willSetFire(),
+                            preSnowballExplodeEvent.willBreakBlocks()
+                    ),
                     event.isAsynchronous()
             ).callEvent();
         }

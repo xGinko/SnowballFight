@@ -5,15 +5,23 @@ import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Color;
 import org.bukkit.entity.Snowball;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class WrappedSnowball {
 
     private final @NotNull Snowball snowball;
-    private @Nullable Color primaryColor, secondaryColor;
+    private @NotNull Color primaryColor, secondaryColor;
 
     public WrappedSnowball(@NotNull Snowball snowball) {
         this.snowball = snowball;
+        SnowballConfig config = SnowballFight.getConfiguration();
+        if (config.colors.size() == 1) {
+            this.primaryColor = this.secondaryColor = config.colors.get(0);
+        } else {
+            this.primaryColor = config.colors.get(SnowballFight.getRandom().nextInt(config.colors.size()));
+            do {
+                this.secondaryColor = config.colors.get(SnowballFight.getRandom().nextInt(config.colors.size()));
+            } while (primaryColor == secondaryColor);
+        }
     }
 
     public @NotNull Snowball snowball() {
@@ -21,28 +29,18 @@ public class WrappedSnowball {
     }
 
     public @NotNull Color getPrimaryColor() {
-        SnowballConfig config = SnowballFight.getConfiguration();
-        if (primaryColor == null)
-            primaryColor = config.getRandomColor();
-        if (secondaryColor == null)
-            return primaryColor;
-        for (int i = 0; i < 100; i++) {
-            if (!primaryColor.equals(secondaryColor)) break;
-            else primaryColor = config.getRandomColor();
-        }
         return primaryColor;
     }
 
     public @NotNull Color getSecondaryColor() {
-        SnowballConfig config = SnowballFight.getConfiguration();
-        if (secondaryColor == null)
-            secondaryColor = config.getRandomColor();
-        if (primaryColor == null)
-            return secondaryColor;
-        for (int i = 0; i < 100; i++) {
-            if (!secondaryColor.equals(primaryColor)) break;
-            else secondaryColor = config.getRandomColor();
-        }
         return secondaryColor;
+    }
+
+    public void setPrimaryColor(@NotNull Color primaryColor) {
+        this.primaryColor = primaryColor;
+    }
+
+    public void setSecondaryColor(@NotNull Color secondaryColor) {
+        this.secondaryColor = secondaryColor;
     }
 }

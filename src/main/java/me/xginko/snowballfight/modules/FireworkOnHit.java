@@ -27,14 +27,15 @@ import org.bukkit.inventory.meta.FireworkMeta;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class FireworkOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
     private final SnowballCache snowballCache;
     private final Cache<UUID, Boolean> snowballFireworks;
-    private final List<FireworkEffect.Type> effectTypes = new ArrayList<>();
-    private final HashSet<EntityType> configuredTypes = new HashSet<>();
+    private final List<FireworkEffect.Type> effectTypes;
+    private final HashSet<EntityType> configuredTypes;
     private final boolean isFolia, dealDamage, dealKnockback, flicker, trail, onlyForEntities, onlyForSpecificEntities, asBlacklist;
 
     protected FireworkOnHit() {
@@ -55,39 +56,46 @@ public class FireworkOnHit implements SnowballModule, Listener {
                 "Whether the firework particles should leave trails.");
         this.flicker = config.getBoolean("settings.fireworks.flicker", false,
                 "Whether the firework particles should flicker.");
-        config.getList("settings.fireworks.types",
-                List.of(FireworkEffect.Type.BURST.name(), FireworkEffect.Type.BALL.name()), """
-                        FireworkEffect Types you wish to use. Has to be a valid enum from:\s
-                        https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html"""
-        ).forEach(effect -> {
-            try {
-                FireworkEffect.Type effectType = FireworkEffect.Type.valueOf(effect);
-                this.effectTypes.add(effectType);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("FireworkEffect Type '"+effect+"' not recognized. " +
-                        "Please use valid enums from: https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html");
-            }
-        });
+        this.effectTypes = config.getList("settings.fireworks.types", Arrays.asList("BURST", "BALL"), 
+                        "FireworkEffect Types you wish to use. Has to be a valid enum from:\n" +
+                        "https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html")
+                .stream()
+                .map(effect -> {
+                    try {
+                        return FireworkEffect.Type.valueOf(effect);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("FireworkEffect Type '"+effect+"' not recognized. " +
+                                "Please use valid enums from: https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        if (effectTypes.isEmpty()) {
+            effectTypes.add(FireworkEffect.Type.BURST);
+        }
         this.onlyForEntities = config.getBoolean("settings.fireworks.only-for-entities", false,
                 "Enable if you only want explosions to happen when a snowball hits an entity.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.fireworks.only-for-specific-entities", false, """
-                When enabled, snowballs will only explode for the configured entity types below.\s
-                Needs only-for-entities to be set to true.""");
-        this.asBlacklist = config.getBoolean("settings.fireworks.use-list-as-blacklist", false, """
-                Setting this and only-for-specific-entities to true will mean there will only be a firework effect\s
-                if the hit entity is NOT on this list.""");
-        config.getList("settings.fireworks.specific-entity-types",
-                List.of(EntityType.PLAYER.name()),
-                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html"
-        ).forEach(configuredType -> {
-            try {
-                EntityType type = EntityType.valueOf(configuredType);
-                this.configuredTypes.add(type);
-            } catch (IllegalArgumentException e) {
-                SnowballFight.getLog().warning("(Fireworks) Configured entity type '"+configuredType+"' not recognized. " +
-                        "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
-            }
-        });
+        this.onlyForSpecificEntities = config.getBoolean("settings.fireworks.only-for-specific-entities", false,
+                "When enabled, snowballs will only explode for the configured entity types below.\n" +
+                "Needs only-for-entities to be set to true.");
+        this.asBlacklist = config.getBoolean("settings.fireworks.use-list-as-blacklist", false,
+                "Setting this and only-for-specific-entities to true will mean there will only be a firework effect\n" +
+                "if the hit entity is NOT on this list.");
+        this.configuredTypes = config.getList("settings.fireworks.specific-entity-types", Collections.singletonList("PLAYER"),
+                "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
+                .stream()
+                .map(configuredType -> {
+                    try {
+                        return EntityType.valueOf(configuredType);
+                    } catch (IllegalArgumentException e) {
+                        SnowballFight.getLog().warn("(Fireworks) Configured entity type '"+configuredType+"' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override
@@ -133,13 +141,14 @@ public class FireworkOnHit implements SnowballModule, Listener {
 
     private void detonateFirework(final Location explosionLoc, final Snowball snowball) {
         Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
-        if (!dealDamage || !dealKnockback) this.snowballFireworks.put(firework.getUniqueId(), true); // store uuid to cancel damage by fireworks
+        if (!dealDamage || !dealKnockback)
+            this.snowballFireworks.put(firework.getUniqueId(), true); // store uuid to cancel damage by fireworks
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();
         WrappedSnowball wrappedSnowball = snowballCache.getOrAdd(snowball);
         meta.addEffect(FireworkEffect.builder()
                 .withColor(wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor())
-                .with(effectTypes.get(new Random().nextInt(effectTypes.size())))
+                .with(effectTypes.get(SnowballFight.getRandom().nextInt(effectTypes.size())))
                 .flicker(flicker)
                 .trail(trail)
                 .build());
