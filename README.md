@@ -1,8 +1,11 @@
 # SnowballFight
 
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/pYHbJ0BOXks" title="See it in action on 6G6S.org!" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 ## Epic snowball battles. Lots of config freedom.
 #### For minecraft servers running paper / folia 1.16.5 - 1.20.4.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z3RVMAJ)
 
 ### Description
 SnowballFight aims to be highly configurable, adding various features to snowballs in-game:
