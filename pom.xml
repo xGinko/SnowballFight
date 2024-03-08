@@ -58,6 +58,10 @@
                                     <pattern>net.kyori</pattern>
                                     <shadedPattern>me.xginko.snowballfight.libs.kyori</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>io.github.thatsmusic99.configurationmaster</pattern>
+                                    <shadedPattern>me.xginko.snowballfight.libs.configmaster</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>
