@@ -68,6 +68,7 @@ public final class SnowballConfig {
                             return Color.WHITE;
                         }
                     })
+                    .distinct()
                     .collect(Collectors.toList()));
         }
 
