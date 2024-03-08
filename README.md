@@ -1,7 +1,7 @@
 # SnowballFight
 
 ## Epic snowball battles. Lots of config freedom.
-#### For minecraft servers running paper / folia 1.16.5 - 1.20.2.
+#### For minecraft servers running paper / folia 1.16.5 - 1.20.4.
 
 
 ### Description
@@ -16,6 +16,8 @@ SnowballFight aims to be highly configurable, adding various features to snowbal
 - levitation when a snowball hits a player or an entity
 - slowness when a snowball hits a player or an entity
 - snowball launch cooldown for players, entities and blocks
+- ability to make snowballs never consume for players
+- drop configurable items from a player's armor slot when hit by a snowball
 - Configurable colors, so you can use it with your servers color theme if you want
 
 All features offer lots of customizable options so you can configure each feature according to your preferences!
