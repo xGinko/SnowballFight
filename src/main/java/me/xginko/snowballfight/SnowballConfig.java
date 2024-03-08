@@ -29,13 +29,13 @@ public final class SnowballConfig {
                 "Don't touch unless you know what you're doing."));
 
         final List<String> defaults = Arrays.asList(
-                "B3E3F4",   // Snowy Dark Sky
-                "B5E5E7",   // Early Winter Snow White slightly Blue
-                "71C3DB",   // Wet Snow Blue White
-                "9BDBFF",   // Midwinter White slightly more Blue
-                "E8EBF0",   // Frost on thin twigs White
-                "59B1BD",   // Midday snow shadow blue
-                "407794"    // Evening slightly red sun snow shadow but more blue
+                "#B3E3F4",   // Snowy Dark Sky
+                "#B5E5E7",   // Early Winter Snow White slightly Blue
+                "#71C3DB",   // Wet Snow Blue White
+                "#9BDBFF",   // Midwinter White slightly more Blue
+                "#E8EBF0",   // Frost on thin twigs White
+                "#59B1BD",   // Midday snow shadow blue
+                "#407794"    // Evening slightly red sun snow shadow but more blue
         );
         this.colors = getList("settings.colors", defaults,
                 "You need to configure at least 1 color. Format: 'B3E3F4' or '#B3E3F4'")
