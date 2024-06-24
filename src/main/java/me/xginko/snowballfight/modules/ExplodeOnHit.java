@@ -1,7 +1,5 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
@@ -10,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -25,18 +24,17 @@ import java.util.stream.Collectors;
 
 public class ExplodeOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final Set<EntityType> configuredTypes;
     private final float explosionPower;
-    private final boolean explosionSetFire, explosionBreakBlocks, onlyForEntities, onlyForSpecificEntities, asBlacklist, isFolia;
+    private final boolean explosionSetFire, explosionBreakBlocks, onlyForEntities, onlyForSpecificEntities, asBlacklist,
+            onlyPlayers;
 
     protected ExplodeOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.explosions","\nMake snowballs explode when hitting something.");
+        this.onlyPlayers = config.getBoolean("settings.explosions.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.explosionPower = config.getFloat("settings.explosions.power", 2.0F,
                 "TNT has a power of 4.0.");
         this.explosionSetFire = config.getBoolean("settings.explosions.set-fire", false,
@@ -94,6 +92,8 @@ public class ExplodeOnHit implements SnowballModule, Listener {
             if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
         }
 
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
+
         PreSnowballExplodeEvent preSnowballExplodeEvent = new PreSnowballExplodeEvent(
                 (Snowball) event.getEntity(),
                 hitEntity,
@@ -109,8 +109,8 @@ public class ExplodeOnHit implements SnowballModule, Listener {
         final Location explodeLoc = preSnowballExplodeEvent.getExplodeLocation();
         final Snowball snowball = preSnowballExplodeEvent.getSnowball();
 
-        if (isFolia) {
-            scheduler.runAtLocation(explodeLoc, snobol -> {
+        if (SnowballFight.isServerFolia()) {
+            SnowballFight.getScheduler().runAtLocation(explodeLoc, snobol -> {
                 new PostSnowballExplodeEvent(
                         preSnowballExplodeEvent.getSnowball(),
                         preSnowballExplodeEvent.getHitEntity(),

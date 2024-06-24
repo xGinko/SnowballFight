@@ -1,6 +1,5 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
@@ -11,6 +10,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Snow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -25,19 +25,19 @@ import java.util.stream.Collectors;
 
 public class SnowOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final Set<EntityType> configuredTypes;
     private final Material powderedSnow;
     private final int snowPatchRadius;
     private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
-    private boolean powderSnowEnabled;
+    private boolean powderSnowEnabled, onlyPlayers;
 
     protected SnowOnHit() {
         shouldEnable();
-        this.scheduler = SnowballFight.getFoliaLib().getImpl();
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.snow",
                 "\nCovers the hit block in snow.");
+        this.onlyPlayers = config.getBoolean("settings.snow.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.snowPatchRadius = config.getInt("settings.snow.size", 2,
                 "How big the snow patch should be that the snowball leaves as block radius.");
         this.formIce = config.getBoolean("settings.snow.form-ice", true,
@@ -104,6 +104,8 @@ public class SnowOnHit implements SnowballModule, Listener {
             if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
         }
 
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
+
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
             coverWithSnowAt(hitBlock);
@@ -117,7 +119,7 @@ public class SnowOnHit implements SnowballModule, Listener {
 
     private void coverWithSnowAt(Block startBlock) {
         final Location hitLoc = startBlock.getLocation().toCenterLocation();
-        scheduler.runAtLocationLater(hitLoc, snowDown -> {
+        SnowballFight.getScheduler().runAtLocationLater(hitLoc, snowDown -> {
             World world = hitLoc.getWorld();
             int centerX = hitLoc.getBlockX();
             int centerY = hitLoc.getBlockY();

@@ -1,7 +1,5 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
@@ -9,6 +7,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -23,20 +22,18 @@ import java.util.stream.Collectors;
 
 public class LightningOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final Set<EntityType> configuredTypes;
     private final double probability;
     private final int strikeAmount, flashCount;
-    private final boolean isFolia, dealDamage, onlyForEntities, onlyForSpecificEntities, asBlacklist;
+    private final boolean dealDamage, onlyForEntities, onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected LightningOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.lightning",
                 "\nStrike a lightning when a snowball hits something.");
+        this.onlyPlayers = config.getBoolean("settings.lightning.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.dealDamage = config.getBoolean("settings.lightning.deal-damage", true,
                 "Whether the lightning strike should deal damage.");
         this.strikeAmount = config.getInt("settings.lightning.strike-count", 2,
@@ -95,8 +92,10 @@ public class LightningOnHit implements SnowballModule, Listener {
             if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
         }
 
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
+
         if (hitEntity != null) {
-            if (isFolia) scheduler.runAtEntity(hitEntity, strike -> strikeLightning(hitEntity.getLocation()));
+            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().runAtEntity(hitEntity, strike -> strikeLightning(hitEntity.getLocation()));
             else strikeLightning(hitEntity.getLocation());
             return;
         }
@@ -104,7 +103,7 @@ public class LightningOnHit implements SnowballModule, Listener {
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
             final Location hitBlockLoc = hitBlock.getLocation();
-            if (isFolia) scheduler.runAtLocation(hitBlockLoc, strike -> strikeLightning(hitBlockLoc));
+            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().runAtLocation(hitBlockLoc, strike -> strikeLightning(hitBlockLoc));
             else strikeLightning(hitBlockLoc);
         }
     }

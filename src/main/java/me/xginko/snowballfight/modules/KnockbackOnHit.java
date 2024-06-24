@@ -1,11 +1,10 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,19 +21,17 @@ import java.util.stream.Collectors;
 
 public class KnockbackOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final Set<EntityType> configuredTypes;
     private final Vector vectorModifier;
     private final double multiplier;
-    private final boolean isFolia, modifyVector, onlyForSpecificEntities, asBlacklist;
+    private final boolean modifyVector, onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected KnockbackOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.knockback", "Modify knockback values on snowball hit.");
+        this.onlyPlayers = config.getBoolean("settings.knockback.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.multiplier = config.getDouble("settings.knockback.multiplier", 1.2,
                 "The multiplier for the knockback of the snowball.");
         this.modifyVector = config.getBoolean("settings.knockback.vector-modifier.enable", true);
@@ -82,13 +79,15 @@ public class KnockbackOnHit implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        final Projectile snowball = event.getEntity();
-        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(snowball.getType()))) return;
         final Entity hitEntity = event.getHitEntity();
         if (hitEntity == null) return;
+        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
 
-        if (isFolia) {
-            scheduler.runAtEntity(hitEntity, knockback -> {
+        final Projectile snowball = event.getEntity();
+        if (onlyPlayers && !(snowball.getShooter() instanceof Player)) return;
+
+        if (SnowballFight.isServerFolia()) {
+            SnowballFight.getScheduler().runAtEntity(hitEntity, knockback -> {
                 if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
                 else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));
             });

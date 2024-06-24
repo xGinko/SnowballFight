@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.destroystokyo.paper.ParticleBuilder;
-import com.tcoded.folialib.impl.ServerImplementation;
 import com.tcoded.folialib.wrapper.task.WrappedTask;
 import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballConfig;
@@ -10,6 +9,7 @@ import me.xginko.snowballfight.WrappedSnowball;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,25 +17,27 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class TrailsWhenThrown implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final SnowballCache snowballCache;
-    private final Map<UUID, WrappedTask> particleTrails = new HashMap<>();
-    private final int particlesPerTick;
+    private final Map<UUID, WrappedTask> particleTrails;
     private final long maxTrailTaskAliveTime, initialDelay, period;
+    private final int particlesPerTick;
+    private final boolean onlyPlayers;
 
     protected TrailsWhenThrown() {
         shouldEnable();
-        this.scheduler = SnowballFight.getFoliaLib().getImpl();
+        this.particleTrails = new ConcurrentHashMap<>();
         this.snowballCache = SnowballFight.getCache();
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.trails", "\nSpawn colored particle trails when a snowball is launched.");
+        this.onlyPlayers = config.getBoolean("settings.trails.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.particlesPerTick = config.getInt("settings.trails.particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low.");
         this.maxTrailTaskAliveTime = TimeUnit.SECONDS.toMillis(config.getInt("settings.trails.max-trail-task-alive-time-seconds", 20,
@@ -69,6 +71,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballLaunch(ProjectileLaunchEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         final Snowball snowball = (Snowball) event.getEntity();
         final WrappedSnowball wrappedSnowball = snowballCache.getOrAdd(snowball);
@@ -86,7 +89,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
 
         this.particleTrails.put(
                 snowballUUID,
-                scheduler.runAtEntityTimer(snowball, () -> {
+                SnowballFight.getScheduler().runAtEntityTimer(snowball, () -> {
                     // Get new current location on each run
                     final Location snowballLoc = snowball.getLocation();
                     // Spawn particles using preconfigured ParticleBuilders

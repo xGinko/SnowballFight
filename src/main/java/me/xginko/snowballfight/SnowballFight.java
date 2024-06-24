@@ -1,6 +1,7 @@
 package me.xginko.snowballfight;
 
 import com.tcoded.folialib.FoliaLib;
+import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.commands.snowballs.SnowballsCommand;
 import me.xginko.snowballfight.modules.SnowballModule;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -99,6 +100,12 @@ public final class SnowballFight extends JavaPlugin {
     }
     public static FoliaLib getFoliaLib() {
         return foliaLib;
+    }
+    public static ServerImplementation getScheduler() {
+        return foliaLib.getImpl();
+    }
+    public static boolean isServerFolia() {
+        return foliaLib.isFolia();
     }
     public static SnowballConfig config() {
         return config;

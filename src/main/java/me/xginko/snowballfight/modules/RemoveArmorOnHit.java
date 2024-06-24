@@ -1,7 +1,5 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Material;
@@ -16,38 +14,36 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RemoveArmorOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
-    private final HashSet<Material> materials;
-    private final boolean isFolia;
+    private final Set<Material> materials;
+    private final boolean onlyPlayers;
 
     protected RemoveArmorOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.drop-armor",
                 "\nWill remove and drop configured material in the armor slots if a player gets hit by a snowball.");
+        this.onlyPlayers = config.getBoolean("settings.drop-armor.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.materials = config.getList("settings.drop-armor.materials", Collections.singletonList("ELYTRA"))
                 .stream()
                 .map(configuredType -> {
                     try {
                         return Material.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn(
-                                "(Drop Armor) Configured material '"+configuredType+"' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/Material.html");
+                        SnowballFight.logger().warn("(Drop Armor) Configured material '{}' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/Material.html", configuredType);
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(Material.class)));
     }
 
     @Override
@@ -70,6 +66,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
         if (event.getHitEntity() == null || event.getHitEntity().getType() != EntityType.PLAYER) return;
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         final Player player = (Player) event.getHitEntity();
         final PlayerInventory playerInventory = player.getInventory();
@@ -80,8 +77,8 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
         for (int i = 0; i < armorContents.length; i++) {
             ItemStack armorItem = armorContents[i];
             if (armorItem != null && materials.contains(armorItem.getType())) {
-                if (isFolia) {
-                    scheduler.runAtEntity(player, drop -> player.getWorld().dropItemNaturally(player.getLocation(), armorItem));
+                if (SnowballFight.isServerFolia()) {
+                    SnowballFight.getScheduler().runAtEntity(player, drop -> player.getWorld().dropItemNaturally(player.getLocation(), armorItem));
                 } else {
                     player.getWorld().dropItemNaturally(player.getLocation(), armorItem);
                 }

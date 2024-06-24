@@ -1,12 +1,11 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.utils.EntityUtil;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -23,16 +22,12 @@ import java.util.stream.Collectors;
 
 public class LevitateOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final Set<EntityType> configuredTypes;
     private final PotionEffect levitation;
-    private final boolean isFolia, onlyForSpecificEntities, asBlacklist;
+    private final boolean onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected LevitateOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.levitation", "\nApply levitation effect on entities hit by snowballs.");
         this.levitation = new PotionEffect(
@@ -40,6 +35,8 @@ public class LevitateOnHit implements SnowballModule, Listener {
                 config.getInt("settings.levitation.duration-ticks", 6, "1 second = 20 ticks."),
                 config.getInt("settings.levitation.potion-amplifier", 48, "Vanilla amplifier of levitation is 1.")
         );
+        this.onlyPlayers = config.getBoolean("settings.levitation.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.onlyForSpecificEntities = config.getBoolean("settings.levitation.only-for-specific-entities", false,
                 "When enabled, only configured entities will levitate when hit by a snowball.");
         this.asBlacklist = config.getBoolean("settings.levitation.use-list-as-blacklist", false,
@@ -84,8 +81,10 @@ public class LevitateOnHit implements SnowballModule, Listener {
         final LivingEntity living = (LivingEntity) event.getHitEntity();
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
 
-        if (isFolia) {
-            scheduler.runAtEntity(living, levitate -> living.addPotionEffect(levitation));
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
+
+        if (SnowballFight.isServerFolia()) {
+            SnowballFight.getScheduler().runAtEntity(living, levitate -> living.addPotionEffect(levitation));
         } else {
             living.addPotionEffect(levitation);
         }

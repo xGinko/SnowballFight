@@ -1,12 +1,11 @@
 package me.xginko.snowballfight.modules;
 
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.utils.EntityUtil;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -15,24 +14,25 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SlownessOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final Set<EntityType> configuredTypes;
     private final PotionEffect slowness;
     private final double probability;
-    private final boolean isFolia, onlyForSpecificEntities, asBlacklist;
+    private final boolean onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected SlownessOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.slowness", "\nApply slowness effect to entities hit by snowballs.");
+        this.onlyPlayers = config.getBoolean("settings.slowness.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.slowness = new PotionEffect(
                 PotionEffectType.SLOW,
                 config.getInt("settings.slowness.duration-ticks", 40, "1 second = 20 ticks."),
@@ -85,8 +85,10 @@ public class SlownessOnHit implements SnowballModule, Listener {
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
         if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;
 
-        if (isFolia) {
-            scheduler.runAtEntity(living, slow -> living.addPotionEffect(slowness));
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
+
+        if (SnowballFight.isServerFolia()) {
+            SnowballFight.getScheduler().runAtEntity(living, slow -> living.addPotionEffect(slowness));
         } else {
             living.addPotionEffect(slowness);
         }

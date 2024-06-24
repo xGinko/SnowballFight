@@ -3,8 +3,6 @@ package me.xginko.snowballfight.modules;
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
@@ -16,6 +14,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -25,29 +24,34 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class FireworkOnHit implements SnowballModule, Listener {
 
-    private final ServerImplementation scheduler;
     private final SnowballCache snowballCache;
     private final Cache<UUID, Boolean> snowballFireworks;
     private final List<FireworkEffect.Type> effectTypes;
-    private final HashSet<EntityType> configuredTypes;
-    private final boolean isFolia, dealDamage, dealKnockback, flicker, trail, onlyForEntities, onlyForSpecificEntities, asBlacklist;
+    private final Set<EntityType> configuredTypes;
+    private final boolean dealDamage, dealKnockback, flicker, trail, onlyForEntities, onlyForSpecificEntities,
+            asBlacklist, onlyPlayers;
 
     protected FireworkOnHit() {
         shouldEnable();
-        FoliaLib foliaLib = SnowballFight.getFoliaLib();
-        this.isFolia = foliaLib.isFolia();
-        this.scheduler = isFolia ? foliaLib.getImpl() : null;
         this.snowballCache = SnowballFight.getCache();
         this.snowballFireworks = Caffeine.newBuilder().expireAfterWrite(2, TimeUnit.SECONDS).build();
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.fireworks",
                 "\nDetonate a firework when a snowball hits something for a cool effect.");
+        this.onlyPlayers = config.getBoolean("settings.fireworks.only-thrown-by-player", true,
+                "If enabled will only work if the snowball was thrown by a player.");
         this.dealDamage = config.getBoolean("settings.fireworks.deal-damage", false,
                 "Should firework effects deal damage like regular fireworks?");
         this.dealKnockback = config.getBoolean("settings.fireworks.deal-knockback", false,
@@ -64,8 +68,8 @@ public class FireworkOnHit implements SnowballModule, Listener {
                     try {
                         return FireworkEffect.Type.valueOf(effect);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("FireworkEffect Type '"+effect+"' not recognized. " +
-                                "Please use valid enums from: https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html");
+                        SnowballFight.logger().warn("(Fireworks) FireworkEffect Type '{}' not recognized. Please use valid enums from:" +
+                                " https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html", effect);
                         return null;
                     }
                 })
@@ -89,13 +93,13 @@ public class FireworkOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Fireworks) Configured entity type '"+configuredType+"' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        SnowballFight.logger().warn("(Fireworks) Configured entity type '{}' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EntityType.class)));
     }
 
     @Override
@@ -117,14 +121,18 @@ public class FireworkOnHit implements SnowballModule, Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+
         final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {
             if (hitEntity == null) return;
             if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
         }
 
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
+
         if (hitEntity != null) {
-            if (isFolia) scheduler.runAtEntity(hitEntity, firework -> detonateFirework(hitEntity.getLocation(), (Snowball) event.getEntity()));
+            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler()
+                    .runAtEntity(hitEntity, firework -> detonateFirework(hitEntity.getLocation(), (Snowball) event.getEntity()));
             else detonateFirework(hitEntity.getLocation(), (Snowball) event.getEntity());
             return;
         }
@@ -133,9 +141,16 @@ public class FireworkOnHit implements SnowballModule, Listener {
 
         if (hitBlock != null) {
             final BlockFace hitFace = event.getHitBlockFace();
-            final Location fireworkLoc = hitFace != null ? hitBlock.getRelative(hitFace).getLocation().toCenterLocation() : hitBlock.getLocation().toCenterLocation();
-            if (isFolia) scheduler.runAtLocation(fireworkLoc, firework -> detonateFirework(fireworkLoc, (Snowball) event.getEntity()));
-            else detonateFirework(hitBlock.getLocation(), (Snowball) event.getEntity());
+            final Location fireworkLoc;
+
+            if (hitFace != null) fireworkLoc = hitBlock.getRelative(hitFace).getLocation().toCenterLocation();
+            else fireworkLoc = hitBlock.getLocation().toCenterLocation();
+
+            if (SnowballFight.isServerFolia()) {
+                SnowballFight.getScheduler().runAtLocation(fireworkLoc, firework -> detonateFirework(fireworkLoc, (Snowball) event.getEntity()));
+            } else {
+                detonateFirework(hitBlock.getLocation(), (Snowball) event.getEntity());
+            }
         }
     }
 
