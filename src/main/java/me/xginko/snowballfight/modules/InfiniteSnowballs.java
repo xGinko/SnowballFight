@@ -14,14 +14,14 @@ public class InfiniteSnowballs implements SnowballModule, Listener {
 
     protected InfiniteSnowballs() {
         shouldEnable();
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.infinite-snowballs",
                 "\nIf enabled, will stop snowballs from being consumed for players.");
     }
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.infinite-snowballs.enable", false);
+        return SnowballFight.config().getBoolean("settings.infinite-snowballs.enable", false);
     }
 
     @Override

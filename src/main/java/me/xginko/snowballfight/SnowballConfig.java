@@ -21,7 +21,7 @@ public final class SnowballConfig {
         // Create plugin folder first if it does not exist yet
         File pluginFolder = SnowballFight.getInstance().getDataFolder();
         if (!pluginFolder.exists() && !pluginFolder.mkdir())
-            SnowballFight.getLog().error("Failed to create plugin folder.");
+            SnowballFight.logger().error("Failed to create plugin folder.");
         // Load config.yml with ConfigMaster
         this.configFile = ConfigFile.loadConfig(new File(pluginFolder, "config.yml"));
 
@@ -50,7 +50,7 @@ public final class SnowballConfig {
                                 Integer.parseInt(parseable.substring(4, 6), 16)
                         );
                     } catch (NumberFormatException e) {
-                        SnowballFight.getLog().warn("Could not parse color '" + hexString + "'. Is it formatted correctly?");
+                        SnowballFight.logger().warn("Could not parse color '{}'. Is it formatted correctly?", hexString);
                         return null;
                     }
                 })
@@ -93,7 +93,7 @@ public final class SnowballConfig {
         try {
             configFile.save();
         } catch (Exception e) {
-            SnowballFight.getLog().error("Failed to save config file!", e);
+            SnowballFight.logger().error("Failed to save config file!", e);
         }
     }
 

@@ -11,7 +11,7 @@ public final class WrappedSnowball {
 
     public WrappedSnowball(@NotNull Snowball snowball) {
         this.snowball = snowball;
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         if (config.colors.size() == 1) {
             this.primaryColor = this.secondaryColor = config.colors.get(0);
         } else {

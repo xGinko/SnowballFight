@@ -4,6 +4,7 @@ import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
+import me.xginko.snowballfight.utils.EntityUtil;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
@@ -29,7 +30,7 @@ public class DamageOnHit implements SnowballModule, Listener {
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.damage", "\nEnable snowballs dealing damage when they hit an entity.");
         this.damage = config.getDouble("settings.damage.damage", 3.0,
                 "Configure the damage that entities take from getting hit by a snowball.");
@@ -44,7 +45,7 @@ public class DamageOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn("(Damage) Configured entity type '"+configuredType+"' not recognized. " +
+                        SnowballFight.logger().warn("(Damage) Configured entity type '"+configuredType+"' not recognized. " +
                                 "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
@@ -55,7 +56,7 @@ public class DamageOnHit implements SnowballModule, Listener {
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.damage.enable", false);
+        return SnowballFight.config().getBoolean("settings.damage.enable", false);
     }
 
     @Override
@@ -69,10 +70,10 @@ public class DamageOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll();
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        if (!(event.getHitEntity() instanceof LivingEntity)) return;
+        if (!EntityUtil.isLivingEntity(event.getHitEntity())) return;
 
         final LivingEntity living = (LivingEntity) event.getHitEntity();
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;

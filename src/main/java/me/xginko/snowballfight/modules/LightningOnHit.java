@@ -16,14 +16,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class LightningOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes;
+    private final Set<EntityType> configuredTypes;
     private final double probability;
     private final int strikeAmount, flashCount;
     private final boolean isFolia, dealDamage, onlyForEntities, onlyForSpecificEntities, asBlacklist;
@@ -33,7 +34,7 @@ public class LightningOnHit implements SnowballModule, Listener {
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.lightning",
                 "\nStrike a lightning when a snowball hits something.");
         this.dealDamage = config.getBoolean("settings.lightning.deal-damage", true,
@@ -58,18 +59,18 @@ public class LightningOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn("(Lightning) Configured entity type '"+configuredType+"' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        SnowballFight.logger().warn("(Lightning) Configured entity type '{}' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EntityType.class)));
     }
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.lightning.enable", false);
+        return SnowballFight.config().getBoolean("settings.lightning.enable", false);
     }
 
     @Override
@@ -83,7 +84,7 @@ public class LightningOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll(this);
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
         if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;

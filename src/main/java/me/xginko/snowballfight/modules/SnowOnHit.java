@@ -5,6 +5,7 @@ import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Snow;
@@ -17,14 +18,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SnowOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes;
+    private final Set<EntityType> configuredTypes;
     private final Material powderedSnow;
     private final int snowPatchRadius;
     private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
@@ -33,7 +35,7 @@ public class SnowOnHit implements SnowballModule, Listener {
     protected SnowOnHit() {
         shouldEnable();
         this.scheduler = SnowballFight.getFoliaLib().getImpl();
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.snow",
                 "\nCovers the hit block in snow.");
         this.snowPatchRadius = config.getInt("settings.snow.size", 2,
@@ -49,7 +51,7 @@ public class SnowOnHit implements SnowballModule, Listener {
                 "Of course only works if your minecraft version has powder snow.");
         if (powderSnowEnabled && powderedSnow == null) {
             powderSnowEnabled = false;
-            SnowballFight.getLog().warn("(Snow) Your server version does not support powder snow. Using regular snow.");
+            SnowballFight.logger().warn("(Snow) Your server version does not support powder snow. Using regular snow.");
             config.master().set("settings.snow.stack-snow-layer.full-layers.use-powder-snow", false);
         }
         this.onlyForEntities = config.getBoolean("settings.snow.only-for-entities", false,
@@ -67,18 +69,18 @@ public class SnowOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn("(Snow) Configured entity type '"+configuredType+"' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        SnowballFight.logger().warn("(Snow) Configured entity type '{}' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EntityType.class)));
     }
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.snow.enable", true);
+        return SnowballFight.config().getBoolean("settings.snow.enable", true);
     }
 
     @Override
@@ -92,7 +94,7 @@ public class SnowOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll(this);
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
 
@@ -116,10 +118,18 @@ public class SnowOnHit implements SnowballModule, Listener {
     private void coverWithSnowAt(Block startBlock) {
         final Location hitLoc = startBlock.getLocation().toCenterLocation();
         scheduler.runAtLocationLater(hitLoc, snowDown -> {
-            for (int x = -snowPatchRadius; x <= snowPatchRadius; x++) {
-                for (int z = -snowPatchRadius; z <= snowPatchRadius; z++) {
-                    for (int y = -snowPatchRadius; y <= snowPatchRadius; y++) {
-                        Block iterativeBlock = startBlock.getRelative(x, y, z);
+            World world = hitLoc.getWorld();
+            int centerX = hitLoc.getBlockX();
+            int centerY = hitLoc.getBlockY();
+            int centerZ = hitLoc.getBlockZ();
+
+            for (int x = centerX - snowPatchRadius; x <= centerX + snowPatchRadius; x++) {
+                for (int z = centerZ - snowPatchRadius; z <= centerZ + snowPatchRadius; z++) {
+                    for (int y = Math.max(world.getMinHeight(), centerY - snowPatchRadius); y <= centerY + snowPatchRadius; y++) {
+                        if (y > world.getMaxHeight()) break;
+
+                        Block iterativeBlock = world.getBlockAt(x, y, z);
+
                         // Gives us that nice round shape
                         if (iterativeBlock.getLocation().distance(hitLoc) >= snowPatchRadius) continue;
 

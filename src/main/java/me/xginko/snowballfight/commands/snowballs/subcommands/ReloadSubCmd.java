@@ -2,7 +2,7 @@ package me.xginko.snowballfight.commands.snowballs.subcommands;
 
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.commands.SubCommand;
-import me.xginko.snowballfight.adventure.KyoriUtil;
+import me.xginko.snowballfight.utils.KyoriUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;

@@ -4,6 +4,7 @@ import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.ServerImplementation;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
+import me.xginko.snowballfight.utils.EntityUtil;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
@@ -20,9 +21,9 @@ import java.util.stream.Collectors;
 public class SlownessOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes;
+    private final Set<EntityType> configuredTypes;
+    private final PotionEffect slowness;
     private final double probability;
-    private final int duration, amplifier;
     private final boolean isFolia, onlyForSpecificEntities, asBlacklist;
 
     protected SlownessOnHit() {
@@ -30,12 +31,13 @@ public class SlownessOnHit implements SnowballModule, Listener {
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.slowness", "\nApply slowness effect to entities hit by snowballs.");
-        this.duration = config.getInt("settings.slowness.duration-ticks", 40,
-                "1 second = 20 ticks.");
-        this.amplifier = config.getInt("settings.slowness.potion-amplifier", 2,
-                "Vanilla amplifier can be up to 2.");
+        this.slowness = new PotionEffect(
+                PotionEffectType.SLOW,
+                config.getInt("settings.slowness.duration-ticks", 40, "1 second = 20 ticks."),
+                config.getInt("settings.slowness.potion-amplifier", 2, "Vanilla amplifier can be up to 2.")
+        );
         this.probability = config.getDouble("settings.slowness.chance", 0.10,
                 "Chance effect is applied on hit as double (100% = 1.00)");
         this.onlyForSpecificEntities = config.getBoolean("settings.slowness.only-for-specific-entities", false,
@@ -49,18 +51,18 @@ public class SlownessOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn("(Slowness) Configured entity type '"+configuredType+"' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        SnowballFight.logger().warn("(Slowness) Configured entity type '{}' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EntityType.class)));
     }
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.slowness.enable", false);
+        return SnowballFight.config().getBoolean("settings.slowness.enable", false);
     }
 
     @Override
@@ -74,19 +76,19 @@ public class SlownessOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll(this);
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        if (!(event.getHitEntity() instanceof LivingEntity)) return;
+        if (!EntityUtil.isLivingEntity(event.getHitEntity())) return;
 
         final LivingEntity living = (LivingEntity) event.getHitEntity();
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
-        if (probability < 1.0 && new Random().nextDouble() > probability) return;
+        if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;
 
         if (isFolia) {
-            scheduler.runAtEntity(living, slow -> living.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, duration, amplifier)));
+            scheduler.runAtEntity(living, slow -> living.addPotionEffect(slowness));
         } else {
-            living.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, duration, amplifier));
+            living.addPotionEffect(slowness);
         }
     }
 }

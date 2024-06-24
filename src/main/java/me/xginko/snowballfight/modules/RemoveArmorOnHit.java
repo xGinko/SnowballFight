@@ -31,7 +31,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.drop-armor",
                 "\nWill remove and drop configured material in the armor slots if a player gets hit by a snowball.");
         this.materials = config.getList("settings.drop-armor.materials", Collections.singletonList("ELYTRA"))
@@ -40,7 +40,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
                     try {
                         return Material.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn(
+                        SnowballFight.logger().warn(
                                 "(Drop Armor) Configured material '"+configuredType+"' not recognized. " +
                                 "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/Material.html");
                         return null;
@@ -52,7 +52,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.drop-armor.enable", false);
+        return SnowballFight.config().getBoolean("settings.drop-armor.enable", false);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll();
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
         if (event.getHitEntity() == null || event.getHitEntity().getType() != EntityType.PLAYER) return;

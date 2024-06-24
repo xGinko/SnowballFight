@@ -18,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -25,7 +26,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
     private final SnowballCache snowballCache;
-    private final HashMap<UUID, WrappedTask> particleTrails = new HashMap<>();
+    private final Map<UUID, WrappedTask> particleTrails = new HashMap<>();
     private final int particlesPerTick;
     private final long maxTrailTaskAliveTime, initialDelay, period;
 
@@ -33,7 +34,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
         shouldEnable();
         this.scheduler = SnowballFight.getFoliaLib().getImpl();
         this.snowballCache = SnowballFight.getCache();
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.trails", "\nSpawn colored particle trails when a snowball is launched.");
         this.particlesPerTick = config.getInt("settings.trails.particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low.");
@@ -49,7 +50,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.trails.enable", true);
+        return SnowballFight.config().getBoolean("settings.trails.enable", true);
     }
 
     @Override
@@ -65,7 +66,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
         this.particleTrails.clear();
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballLaunch(ProjectileLaunchEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
 

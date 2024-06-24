@@ -42,7 +42,7 @@ public final class SnowballFight extends JavaPlugin {
         logger.info(Component.text("           ██████           ").style(snowy));
         logger.info(Component.text("                            ").style(snowy));
         logger.info(Component.text("       Snowball Fight       ").style(snowy));
-        logger.info(Component.text("       Made by xGinko       ").style(snowy));
+        logger.info(Component.text("         by xGinko          ").style(snowy));
         logger.info(Component.text("                            ").style(snowy));
         logger.info(Component.text("Loading Config"));
         reloadConfiguration();
@@ -100,10 +100,10 @@ public final class SnowballFight extends JavaPlugin {
     public static FoliaLib getFoliaLib() {
         return foliaLib;
     }
-    public static SnowballConfig getConfiguration() {
+    public static SnowballConfig config() {
         return config;
     }
-    public static ComponentLogger getLog() {
+    public static ComponentLogger logger() {
         return logger;
     }
     public static Random getRandom() {

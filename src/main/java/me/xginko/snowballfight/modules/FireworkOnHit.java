@@ -45,7 +45,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
         this.snowballCache = SnowballFight.getCache();
         this.snowballFireworks = Caffeine.newBuilder().expireAfterWrite(2, TimeUnit.SECONDS).build();
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.fireworks",
                 "\nDetonate a firework when a snowball hits something for a cool effect.");
         this.dealDamage = config.getBoolean("settings.fireworks.deal-damage", false,
@@ -64,7 +64,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
                     try {
                         return FireworkEffect.Type.valueOf(effect);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn("FireworkEffect Type '"+effect+"' not recognized. " +
+                        SnowballFight.logger().warn("FireworkEffect Type '"+effect+"' not recognized. " +
                                 "Please use valid enums from: https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html");
                         return null;
                     }
@@ -89,7 +89,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn("(Fireworks) Configured entity type '"+configuredType+"' not recognized. " +
+                        SnowballFight.logger().warn("(Fireworks) Configured entity type '"+configuredType+"' not recognized. " +
                                 "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
@@ -100,7 +100,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.fireworks.enable", true);
+        return SnowballFight.config().getBoolean("settings.fireworks.enable", true);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
         HandlerList.unregisterAll(this);
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
         final Entity hitEntity = event.getHitEntity();
@@ -164,7 +164,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onKnockback(EntityKnockbackByEntityEvent event) {
         if (!dealKnockback && this.snowballFireworks.getIfPresent(event.getHitBy().getUniqueId()) != null) {
             event.setCancelled(true);

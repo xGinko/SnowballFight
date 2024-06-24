@@ -15,14 +15,15 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.util.Vector;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class KnockbackOnHit implements SnowballModule, Listener {
 
     private final ServerImplementation scheduler;
-    private final HashSet<EntityType> configuredTypes;
+    private final Set<EntityType> configuredTypes;
     private final Vector vectorModifier;
     private final double multiplier;
     private final boolean isFolia, modifyVector, onlyForSpecificEntities, asBlacklist;
@@ -32,7 +33,7 @@ public class KnockbackOnHit implements SnowballModule, Listener {
         FoliaLib foliaLib = SnowballFight.getFoliaLib();
         this.isFolia = foliaLib.isFolia();
         this.scheduler = isFolia ? foliaLib.getImpl() : null;
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.knockback", "Modify knockback values on snowball hit.");
         this.multiplier = config.getDouble("settings.knockback.multiplier", 1.2,
                 "The multiplier for the knockback of the snowball.");
@@ -53,18 +54,18 @@ public class KnockbackOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.getLog().warn("(Knockback) Configured entity type '"+configuredType+"' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
+                        SnowballFight.logger().warn("(Knockback) Configured entity type '{}' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EntityType.class)));
     }
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.knockback.enable", true);
+        return SnowballFight.config().getBoolean("settings.knockback.enable", true);
     }
 
     @Override
@@ -87,9 +88,13 @@ public class KnockbackOnHit implements SnowballModule, Listener {
         if (hitEntity == null) return;
 
         if (isFolia) {
-            scheduler.runAtEntity(hitEntity, knockback -> hitEntity.setVelocity(modifyVector ? snowball.getVelocity().multiply(multiplier).add(vectorModifier) : snowball.getVelocity().multiply(multiplier)));
+            scheduler.runAtEntity(hitEntity, knockback -> {
+                if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
+                else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));
+            });
         } else {
-            hitEntity.setVelocity(modifyVector ? snowball.getVelocity().multiply(multiplier).add(vectorModifier) : snowball.getVelocity().multiply(multiplier));
+            if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
+            else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));
         }
     }
 }

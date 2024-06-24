@@ -27,7 +27,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
 
     protected ThrowCoolDown() {
         shouldEnable();
-        SnowballConfig config = SnowballFight.getConfiguration();
+        SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.cooldown",
                 "Configure a cooldown delay between throwing snowballs for players.");
         this.player_cooldowns = Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
@@ -45,7 +45,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
 
     @Override
     public boolean shouldEnable() {
-        return SnowballFight.getConfiguration().getBoolean("settings.cooldown.enable", false);
+        return SnowballFight.config().getBoolean("settings.cooldown.enable", false);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
         HandlerList.unregisterAll(this);
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onPlayerLaunchSnowball(PlayerLaunchProjectileEvent event) {
         if (!event.getProjectile().getType().equals(EntityType.SNOWBALL)) return;
 
@@ -73,7 +73,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onEntityLaunch(ProjectileLaunchEvent event) {
         if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
 
