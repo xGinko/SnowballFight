@@ -81,11 +81,10 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
                 .color(wrappedSnowball.getSecondaryColor())
                 .count(particlesPerTick);
 
-        final UUID snowballUUID = snowball.getUniqueId();
         final long stopTimeMillis = System.currentTimeMillis() + maxTrailTaskAliveTime;
 
         this.particleTrails.put(
-                snowballUUID,
+                snowball.getUniqueId(),
                 SnowballFight.getScheduler().entitySpecificScheduler(snowball).runAtFixedRate(() -> {
                     // Get new current location on each run
                     final Location snowballLoc = snowball.getLocation();
@@ -94,9 +93,9 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
                     secondary.location(snowballLoc).spawn();
                     // Stop the task because by itself it would keep running until server restart.
                     if (snowball.isDead() || System.currentTimeMillis() > stopTimeMillis) {
-                        ScheduledTask trails = particleTrails.get(snowballUUID);
+                        ScheduledTask trails = particleTrails.get(snowball.getUniqueId());
                         if (trails != null) trails.cancel();
-                        particleTrails.remove(snowballUUID);
+                        particleTrails.remove(snowball.getUniqueId());
                     }
                 }, null, initialDelay, period)
         );

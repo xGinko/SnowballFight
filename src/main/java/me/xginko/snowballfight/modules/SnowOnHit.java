@@ -1,5 +1,7 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XEntityType;
+import com.cryptomorin.xseries.XMaterial;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
@@ -26,7 +28,6 @@ import java.util.stream.Collectors;
 public class SnowOnHit implements SnowballModule, Listener {
 
     private final Set<EntityType> configuredTypes;
-    private final Material powderedSnow;
     private final int snowPatchRadius;
     private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
     private boolean powderSnowEnabled, onlyPlayers;
@@ -46,10 +47,9 @@ public class SnowOnHit implements SnowballModule, Listener {
                 "Adds snow on top of existing snow layers.");
         this.replaceFullLayer = config.getBoolean("settings.snow.stack-snow-layer.full-layers.turn-to-blocks", false,
                 "Recommended to leave off if you want the snow layers to be able to melt away.");
-        this.powderedSnow = Material.matchMaterial("POWDER_SNOW");
-        this.powderSnowEnabled = config.getBoolean("settings.snow.stack-snow-layer.full-layers.use-powder-snow", powderedSnow != null,
+        this.powderSnowEnabled = config.getBoolean("settings.snow.stack-snow-layer.full-layers.use-powder-snow", XMaterial.POWDER_SNOW.isSupported(),
                 "Of course only works if your minecraft version has powder snow.");
-        if (powderSnowEnabled && powderedSnow == null) {
+        if (powderSnowEnabled && !XMaterial.POWDER_SNOW.isSupported()) {
             powderSnowEnabled = false;
             SnowballFight.logger().warn("(Snow) Your server version does not support powder snow. Using regular snow.");
             config.master().set("settings.snow.stack-snow-layer.full-layers.use-powder-snow", false);
@@ -96,7 +96,7 @@ public class SnowOnHit implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
-        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
         final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {
@@ -138,13 +138,13 @@ public class SnowOnHit implements SnowballModule, Listener {
                         Material iterativeType = iterativeBlock.getType();
 
                         if (iterativeType.isAir()) {
-                            if (iterativeBlock.getRelative(BlockFace.DOWN).getType().isSolid()) {
-                                iterativeBlock.setType(Material.SNOW, true);
+                            if (iterativeBlock.getRelative(BlockFace.DOWN).isSolid()) {
+                                iterativeBlock.setType(XMaterial.SNOW.parseMaterial(), true);
                             }
                             continue;
                         }
 
-                        if (addSnowLayer && iterativeType.equals(Material.SNOW)) {
+                        if (addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
                             Snow snow = (Snow) iterativeBlock.getBlockData();
                             final int layers = snow.getLayers();
                             if (replaceFullLayer) {
@@ -153,7 +153,7 @@ public class SnowOnHit implements SnowballModule, Listener {
                                     iterativeBlock.setBlockData(snow);
                                 } else {
                                     // If only one or no more layers left to add, turn into snow block.
-                                    iterativeBlock.setType(powderSnowEnabled ? powderedSnow : Material.SNOW_BLOCK, true);
+                                    iterativeBlock.setType(powderSnowEnabled ? XMaterial.POWDER_SNOW.parseMaterial() : XMaterial.SNOW_BLOCK.parseMaterial(), true);
                                 }
                             } else {
                                 if (layers < snow.getMaximumLayers()) {
@@ -164,8 +164,8 @@ public class SnowOnHit implements SnowballModule, Listener {
                             continue;
                         }
 
-                        if (formIce && iterativeType.equals(Material.WATER)) {
-                            iterativeBlock.setType(Material.ICE, true);
+                        if (formIce && iterativeType.equals(XMaterial.WATER.parseMaterial())) {
+                            iterativeBlock.setType(XMaterial.ICE.parseMaterial(), true);
                         }
                     }
                 }
