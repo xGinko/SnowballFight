@@ -1,6 +1,7 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
+import com.cryptomorin.xseries.XPotion;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.utils.Util;
@@ -13,7 +14,6 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -35,7 +35,7 @@ public class SlownessOnHit implements SnowballModule, Listener {
         this.onlyPlayers = config.getBoolean("settings.slowness.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
         this.slowness = new PotionEffect(
-                PotionEffectType.SLOW,
+                XPotion.SLOWNESS.getPotionEffectType(),
                 config.getInt("settings.slowness.duration-ticks", 40, "1 second = 20 ticks."),
                 config.getInt("settings.slowness.potion-amplifier", 2, "Vanilla amplifier can be up to 2.")
         );

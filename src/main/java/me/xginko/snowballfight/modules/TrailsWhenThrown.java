@@ -1,11 +1,11 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.particles.XParticle;
 import com.destroystokyo.paper.ParticleBuilder;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
@@ -74,10 +74,10 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
         final WrappedSnowball wrappedSnowball = SnowballFight.getCache().get(snowball.getUniqueId(), k -> new WrappedSnowball(snowball));
 
         // According to console errors, only redstone particles can be colored
-        ParticleBuilder primary = new ParticleBuilder(Particle.REDSTONE)
+        ParticleBuilder primary = new ParticleBuilder(XParticle.DUST.get())
                 .color(wrappedSnowball.getPrimaryColor())
                 .count(particlesPerTick);
-        ParticleBuilder secondary = new ParticleBuilder(Particle.REDSTONE)
+        ParticleBuilder secondary = new ParticleBuilder(XParticle.DUST.get())
                 .color(wrappedSnowball.getSecondaryColor())
                 .count(particlesPerTick);
 
