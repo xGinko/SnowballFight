@@ -66,7 +66,7 @@ public class DamageOnHit implements SnowballModule, Listener {
 
     @Override
     public void disable() {
-        HandlerList.unregisterAll();
+        HandlerList.unregisterAll(this);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
