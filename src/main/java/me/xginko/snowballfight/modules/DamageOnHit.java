@@ -1,8 +1,9 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.utils.EntityUtil;
+import me.xginko.snowballfight.utils.Util;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -70,17 +71,18 @@ public class DamageOnHit implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
-        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        if (!EntityUtil.isLivingEntity(event.getHitEntity())) return;
+        if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
+        if (!Util.isLivingEntity(event.getHitEntity())) return;
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
-        final LivingEntity living = (LivingEntity) event.getHitEntity();
-        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
+        final LivingEntity livingEntity = (LivingEntity) event.getHitEntity();
+        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(livingEntity.getType()))) return;
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().runAtEntity(living, dmg -> living.damage(damage, event.getEntity()));
+            SnowballFight.getScheduler().entitySpecificScheduler(livingEntity)
+                    .run(() -> livingEntity.damage(damage, event.getEntity()), null);
         } else {
-            living.damage(damage, event.getEntity());
+            livingEntity.damage(damage, event.getEntity());
         }
     }
 }

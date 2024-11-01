@@ -1,5 +1,6 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.entity.Entity;
@@ -78,7 +79,7 @@ public class KnockbackOnHit implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
-        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         final Entity hitEntity = event.getHitEntity();
         if (hitEntity == null) return;
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
@@ -87,10 +88,10 @@ public class KnockbackOnHit implements SnowballModule, Listener {
         if (onlyPlayers && !(snowball.getShooter() instanceof Player)) return;
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().runAtEntity(hitEntity, knockback -> {
+            SnowballFight.getScheduler().entitySpecificScheduler(hitEntity).run(() -> {
                 if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
                 else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));
-            });
+            }, null);
         } else {
             if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
             else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));

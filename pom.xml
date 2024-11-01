@@ -6,12 +6,12 @@
 
     <groupId>me.xginko</groupId>
     <artifactId>SnowballFight</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <packaging>jar</packaging>
 
     <name>SnowballFight</name>
     <description>Make snowball fights fun and engaging.</description>
-    <url>githhub.com/xGinko/SnowballFight</url>
+    <url>github.com/xGinko/SnowballFight</url>
 
     <properties>
         <java.version>1.8</java.version>
@@ -62,6 +62,10 @@
                                     <pattern>io.github.thatsmusic99.configurationmaster</pattern>
                                     <shadedPattern>me.xginko.snowballfight.libs.configmaster</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.github.cryptomorin</pattern>
+                                    <shadedPattern>me.xginko.snowballfight.libs.xseries</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>
@@ -98,22 +102,22 @@
             <url>https://ci.pluginwiki.us/plugin/repository/everything/</url>
         </repository>
         <repository>
-            <id>folialib-repo</id>
-            <url>https://nexuslite.gcnt.net/repos/other/</url>
+            <id>spacearim-repo</id>
+            <url>https://mvn-repo.arim.space/lesser-gpl3/</url>
         </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>io.papermc.paper</groupId>
+            <groupId>com.destroystokyo.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.20.4-R0.1-SNAPSHOT</version>
+            <version>1.16.5-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.tcoded</groupId>
-            <artifactId>FoliaLib</artifactId>
-            <version>0.3.4</version>
+            <groupId>space.arim.morepaperlib</groupId>
+            <artifactId>morepaperlib</artifactId>
+            <version>0.4.3</version>
         </dependency>
         <dependency>
             <groupId>com.github.thatsmusic99</groupId>
@@ -126,9 +130,19 @@
             <version>2.9.3</version>
         </dependency>
         <dependency>
+            <groupId>com.github.cryptomorin</groupId>
+            <artifactId>XSeries</artifactId>
+            <version>11.3.0</version>
+        </dependency>
+        <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-platform-bukkit</artifactId>
-            <version>4.3.3</version>
+            <version>4.3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-api</artifactId>
+            <version>4.17.0</version>
         </dependency>
         <dependency>
             <groupId>net.kyori</groupId>

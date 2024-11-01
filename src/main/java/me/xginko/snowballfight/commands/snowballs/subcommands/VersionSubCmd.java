@@ -3,7 +3,7 @@ package me.xginko.snowballfight.commands.snowballs.subcommands;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.commands.SubCommand;
-import me.xginko.snowballfight.utils.KyoriUtil;
+import me.xginko.snowballfight.utils.Util;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -49,7 +49,7 @@ public class VersionSubCmd extends SubCommand {
             author = pluginYML.getAuthors().get(0);
         }
 
-        KyoriUtil.sendMessage(sender, Component.newline()
+        Util.sendMessage(sender, Component.newline()
                 .append(
                         Component.text(name + " " + version)
                                 .color(NamedTextColor.GOLD)

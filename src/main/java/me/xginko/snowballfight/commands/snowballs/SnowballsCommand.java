@@ -4,7 +4,7 @@ import me.xginko.snowballfight.commands.SubCommand;
 import me.xginko.snowballfight.commands.snowballs.subcommands.DisableSubCmd;
 import me.xginko.snowballfight.commands.snowballs.subcommands.ReloadSubCmd;
 import me.xginko.snowballfight.commands.snowballs.subcommands.VersionSubCmd;
-import me.xginko.snowballfight.utils.KyoriUtil;
+import me.xginko.snowballfight.utils.Util;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
@@ -54,11 +54,11 @@ public class SnowballsCommand implements TabCompleter, CommandExecutor {
     private void sendCommandOverview(CommandSender sender) {
         if (!sender.hasPermission("snowballfight.cmd.*")) return;
 
-        KyoriUtil.sendMessage(sender, Component.text("-----------------------------------------------------").color(NamedTextColor.GRAY));
-        KyoriUtil.sendMessage(sender, Component.text("SnowballFight Commands").color(NamedTextColor.WHITE));
-        KyoriUtil.sendMessage(sender, Component.text("-----------------------------------------------------").color(NamedTextColor.GRAY));
-        subCommands.forEach(subCommand -> KyoriUtil.sendMessage(sender, 
+        Util.sendMessage(sender, Component.text("-----------------------------------------------------").color(NamedTextColor.GRAY));
+        Util.sendMessage(sender, Component.text("SnowballFight Commands").color(NamedTextColor.WHITE));
+        Util.sendMessage(sender, Component.text("-----------------------------------------------------").color(NamedTextColor.GRAY));
+        subCommands.forEach(subCommand -> Util.sendMessage(sender,
                 subCommand.getSyntax().append(Component.text(" - ").color(NamedTextColor.DARK_GRAY)).append(subCommand.getDescription())));
-        KyoriUtil.sendMessage(sender, Component.text("-----------------------------------------------------").color(NamedTextColor.GRAY));
+        Util.sendMessage(sender, Component.text("-----------------------------------------------------").color(NamedTextColor.GRAY));
     }
 }

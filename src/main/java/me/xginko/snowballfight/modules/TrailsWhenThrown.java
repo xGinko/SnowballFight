@@ -1,8 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.destroystokyo.paper.ParticleBuilder;
-import com.tcoded.folialib.wrapper.task.WrappedTask;
-import me.xginko.snowballfight.SnowballCache;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
@@ -16,6 +14,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import space.arim.morepaperlib.scheduling.ScheduledTask;
 
 import java.util.Map;
 import java.util.UUID;
@@ -24,8 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TrailsWhenThrown implements SnowballModule, Listener {
 
-    private final SnowballCache snowballCache;
-    private final Map<UUID, WrappedTask> particleTrails;
+    private final Map<UUID, ScheduledTask> particleTrails;
     private final long maxTrailTaskAliveTime, initialDelay, period;
     private final int particlesPerTick;
     private final boolean onlyPlayers;
@@ -33,7 +31,6 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     protected TrailsWhenThrown() {
         shouldEnable();
         this.particleTrails = new ConcurrentHashMap<>();
-        this.snowballCache = SnowballFight.getCache();
         SnowballConfig config = SnowballFight.config();
         config.master().addComment("settings.trails", "\nSpawn colored particle trails when a snowball is launched.");
         this.onlyPlayers = config.getBoolean("settings.trails.only-thrown-by-player", true,
@@ -64,7 +61,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
     @Override
     public void disable() {
         HandlerList.unregisterAll(this);
-        this.particleTrails.values().forEach(WrappedTask::cancel);
+        this.particleTrails.values().forEach(ScheduledTask::cancel);
         this.particleTrails.clear();
     }
 
@@ -74,7 +71,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         final Snowball snowball = (Snowball) event.getEntity();
-        final WrappedSnowball wrappedSnowball = snowballCache.getOrAdd(snowball);
+        final WrappedSnowball wrappedSnowball = SnowballFight.getCache().get(snowball.getUniqueId(), k -> new WrappedSnowball(snowball));
 
         // According to console errors, only redstone particles can be colored
         ParticleBuilder primary = new ParticleBuilder(Particle.REDSTONE)
@@ -89,7 +86,7 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
 
         this.particleTrails.put(
                 snowballUUID,
-                SnowballFight.getScheduler().runAtEntityTimer(snowball, () -> {
+                SnowballFight.getScheduler().entitySpecificScheduler(snowball).runAtFixedRate(() -> {
                     // Get new current location on each run
                     final Location snowballLoc = snowball.getLocation();
                     // Spawn particles using preconfigured ParticleBuilders
@@ -97,11 +94,11 @@ public class TrailsWhenThrown implements SnowballModule, Listener {
                     secondary.location(snowballLoc).spawn();
                     // Stop the task because by itself it would keep running until server restart.
                     if (snowball.isDead() || System.currentTimeMillis() > stopTimeMillis) {
-                        WrappedTask trails = particleTrails.get(snowballUUID);
+                        ScheduledTask trails = particleTrails.get(snowballUUID);
                         if (trails != null) trails.cancel();
                         particleTrails.remove(snowballUUID);
                     }
-                }, initialDelay, period)
+                }, null, initialDelay, period)
         );
     }
 }

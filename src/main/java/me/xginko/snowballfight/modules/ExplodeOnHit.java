@@ -1,5 +1,6 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
@@ -83,7 +84,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
-        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
         final Entity hitEntity = event.getHitEntity();
 
@@ -110,7 +111,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
         final Snowball snowball = preSnowballExplodeEvent.getSnowball();
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().runAtLocation(explodeLoc, snobol -> {
+            SnowballFight.getScheduler().regionSpecificScheduler(explodeLoc).run(() -> {
                 new PostSnowballExplodeEvent(
                         preSnowballExplodeEvent.getSnowball(),
                         preSnowballExplodeEvent.getHitEntity(),
@@ -126,7 +127,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
                                 preSnowballExplodeEvent.willSetFire(),
                                 preSnowballExplodeEvent.willBreakBlocks()
                         ),
-                        event.isAsynchronous()
+                        false
                 ).callEvent();
             });
         } else {

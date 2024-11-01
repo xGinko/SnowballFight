@@ -1,13 +1,14 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XMaterial;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
-import org.bukkit.Material;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class InfiniteSnowballs implements SnowballModule, Listener {
@@ -36,14 +37,12 @@ public class InfiniteSnowballs implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
-    public void onInteract(PlayerInteractEvent event) {
-        if (event.getMaterial() != Material.SNOWBALL) return;
+    private void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getMaterial() != XMaterial.SNOWBALL.parseMaterial()) return;
 
-        switch (event.getAction()) {
-            case RIGHT_CLICK_AIR:
-            case RIGHT_CLICK_BLOCK:
-                event.setCancelled(true);
-                event.getPlayer().launchProjectile(Snowball.class);
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            event.setCancelled(true);
+            event.getPlayer().launchProjectile(Snowball.class);
         }
     }
 }

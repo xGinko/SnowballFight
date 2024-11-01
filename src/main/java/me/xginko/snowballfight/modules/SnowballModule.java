@@ -11,9 +11,13 @@ public interface SnowballModule {
 
     HashSet<SnowballModule> modules = new HashSet<>();
 
-    static void reloadModules() {
+    static void disableAll() {
         modules.forEach(SnowballModule::disable);
         modules.clear();
+    }
+
+    static void reloadModules() {
+        disableAll();
 
         modules.add(new InfiniteSnowballs());
         modules.add(new DamageOnHit());

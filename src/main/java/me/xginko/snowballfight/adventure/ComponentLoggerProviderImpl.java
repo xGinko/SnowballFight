@@ -1,5 +1,6 @@
 package me.xginko.snowballfight.adventure;
 
+import me.xginko.snowballfight.utils.TranslatableMapper;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.logger.slf4j.ComponentLoggerProvider;
 import net.kyori.adventure.text.serializer.ansi.ANSIComponentSerializer;

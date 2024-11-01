@@ -1,5 +1,6 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XEntityType;
 import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -61,7 +62,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onPlayerLaunchSnowball(PlayerLaunchProjectileEvent event) {
-        if (!event.getProjectile().getType().equals(EntityType.SNOWBALL)) return;
+        if (event.getProjectile().getType() != XEntityType.SNOWBALL.get()) return;
 
         final UUID playerUniqueId = event.getPlayer().getUniqueId();
 
@@ -75,7 +76,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onEntityLaunch(ProjectileLaunchEvent event) {
-        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
         final ProjectileSource shooter = event.getEntity().getShooter();
 

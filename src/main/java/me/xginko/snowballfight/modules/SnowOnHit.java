@@ -119,7 +119,7 @@ public class SnowOnHit implements SnowballModule, Listener {
 
     private void coverWithSnowAt(Block startBlock) {
         final Location hitLoc = startBlock.getLocation().toCenterLocation();
-        SnowballFight.getScheduler().runAtLocationLater(hitLoc, snowDown -> {
+        SnowballFight.getScheduler().regionSpecificScheduler(hitLoc).runDelayed(() -> {
             World world = hitLoc.getWorld();
             int centerX = hitLoc.getBlockX();
             int centerY = hitLoc.getBlockY();

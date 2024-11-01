@@ -1,9 +1,9 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -83,7 +83,7 @@ public class LightningOnHit implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
-        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
+        if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;
 
         final Entity hitEntity = event.getHitEntity();
@@ -95,7 +95,8 @@ public class LightningOnHit implements SnowballModule, Listener {
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         if (hitEntity != null) {
-            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().runAtEntity(hitEntity, strike -> strikeLightning(hitEntity.getLocation()));
+            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().entitySpecificScheduler(hitEntity)
+                    .run(() -> strikeLightning(hitEntity.getLocation()), null);
             else strikeLightning(hitEntity.getLocation());
             return;
         }
@@ -103,15 +104,16 @@ public class LightningOnHit implements SnowballModule, Listener {
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
             final Location hitBlockLoc = hitBlock.getLocation();
-            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().runAtLocation(hitBlockLoc, strike -> strikeLightning(hitBlockLoc));
+            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().regionSpecificScheduler(hitBlockLoc)
+                    .run(() -> strikeLightning(hitBlockLoc));
             else strikeLightning(hitBlockLoc);
         }
     }
 
     private void strikeLightning(final Location strikeLoc) {
-        final World world = strikeLoc.getWorld();
         for (int i = 0; i < strikeAmount; i++) {
-            (dealDamage ? world.strikeLightning(strikeLoc) : world.strikeLightningEffect(strikeLoc)).setFlashCount(flashCount);
+            (dealDamage ? strikeLoc.getWorld().strikeLightning(strikeLoc) : strikeLoc.getWorld().strikeLightningEffect(strikeLoc))
+                    .setFlashCount(flashCount);
         }
     }
 }

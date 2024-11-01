@@ -1,4 +1,4 @@
-package me.xginko.snowballfight.adventure;
+package me.xginko.snowballfight.utils;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;

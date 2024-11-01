@@ -1,9 +1,9 @@
 package me.xginko.snowballfight.modules;
 
+import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Material;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -64,8 +64,8 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onSnowballHit(ProjectileHitEvent event) {
-        if (!event.getEntityType().equals(EntityType.SNOWBALL)) return;
-        if (event.getHitEntity() == null || event.getHitEntity().getType() != EntityType.PLAYER) return;
+        if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
+        if (event.getHitEntity() == null || event.getHitEntity().getType() != XEntityType.PLAYER.get()) return;
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         final Player player = (Player) event.getHitEntity();
@@ -78,7 +78,8 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
             ItemStack armorItem = armorContents[i];
             if (armorItem != null && materials.contains(armorItem.getType())) {
                 if (SnowballFight.isServerFolia()) {
-                    SnowballFight.getScheduler().runAtEntity(player, drop -> player.getWorld().dropItemNaturally(player.getLocation(), armorItem));
+                    SnowballFight.getScheduler().entitySpecificScheduler(player)
+                            .run(() -> player.getWorld().dropItemNaturally(player.getLocation(), armorItem), null);
                 } else {
                     player.getWorld().dropItemNaturally(player.getLocation(), armorItem);
                 }
