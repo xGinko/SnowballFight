@@ -47,8 +47,8 @@
                                     <shadedPattern>me.xginko.snowballfight.libs.caffeine</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.tcoded.folialib</pattern>
-                                    <shadedPattern>me.xginko.snowballfight.libs.folialib</shadedPattern>
+                                    <pattern>space.arim.morepaperlib</pattern>
+                                    <shadedPattern>me.xginko.snowballfight.libs.morepaperlib</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.bstats</pattern>
