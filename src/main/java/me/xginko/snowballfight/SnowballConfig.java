@@ -1,5 +1,6 @@
 package me.xginko.snowballfight;
 
+import com.google.common.collect.ImmutableList;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import org.bukkit.Color;
 import org.jetbrains.annotations.NotNull;
@@ -55,23 +56,24 @@ public final class SnowballConfig {
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        if (colors.isEmpty()) {
-            colors.addAll(defaults.stream()
-                    .map(string -> {
-                        try {
-                            return Color.fromRGB(
-                                    Integer.parseInt(string.substring(0, 2), 16),
-                                    Integer.parseInt(string.substring(2, 4), 16),
-                                    Integer.parseInt(string.substring(4, 6), 16));
-                        } catch (Exception e) {
-                            return Color.WHITE;
-                        }
-                    })
-                    .distinct()
-                    .collect(Collectors.toList()));
-        }
-
+                .collect(Collectors.collectingAndThen(Collectors.toList(), collected -> {
+                    if (collected.isEmpty()) {
+                        collected.addAll(defaults.stream()
+                                .map(string -> {
+                                    try {
+                                        return Color.fromRGB(
+                                                Integer.parseInt(string.substring(0, 2), 16),
+                                                Integer.parseInt(string.substring(2, 4), 16),
+                                                Integer.parseInt(string.substring(4, 6), 16));
+                                    } catch (Exception e) {
+                                        return Color.WHITE;
+                                    }
+                                })
+                                .distinct()
+                                .collect(Collectors.toList()));
+                    }
+                    return ImmutableList.copyOf(collected);
+                }));
         structure();
     }
 
