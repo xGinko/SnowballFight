@@ -51,11 +51,8 @@ public abstract class SnowballModule implements Enableable, Disableable {
         this.config = SnowballFight.config();
         this.scheduling = SnowballFight.scheduling();
 
-        if (comment == null || comment.isEmpty()) {
-            this.enabled_in_config = config.getBoolean(configPath + ".enable", defEnabled);
-        } else {
-            this.enabled_in_config = config.getBoolean(configPath + ".enable", defEnabled, comment);
-        }
+        this.enabled_in_config = config.getBoolean(configPath + ".enable", defEnabled);
+        if (comment != null) config.master().addComment(configPath, comment);
 
         String[] paths = configPath.split("\\.");
         if (paths.length <= 2) {
