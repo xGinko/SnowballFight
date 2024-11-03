@@ -19,7 +19,7 @@ public final class Util {
     }
 
     public static void sendMessage(CommandSender sender, Component message) {
-        SnowballFight.getAudiences().sender(sender).sendMessage(message);
+        SnowballFight.audiences().sender(sender).sendMessage(message);
     }
 
     public static boolean hasClass(String className) {

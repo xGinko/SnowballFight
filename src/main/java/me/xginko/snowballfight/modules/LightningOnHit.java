@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -20,7 +19,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class LightningOnHit implements SnowballModule, Listener {
+public class LightningOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
     private final double probability;
@@ -28,9 +27,7 @@ public class LightningOnHit implements SnowballModule, Listener {
     private final boolean dealDamage, onlyForEntities, onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected LightningOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.lightning",
+        super("settings.lightning", false,
                 "\nStrike a lightning when a snowball hits something.");
         this.onlyPlayers = config.getBoolean("settings.lightning.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
@@ -56,8 +53,8 @@ public class LightningOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Lightning) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })
@@ -66,13 +63,7 @@ public class LightningOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.lightning.enable", false);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -82,7 +73,7 @@ public class LightningOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;
 
@@ -95,7 +86,7 @@ public class LightningOnHit implements SnowballModule, Listener {
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         if (hitEntity != null) {
-            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().entitySpecificScheduler(hitEntity)
+            if (SnowballFight.isServerFolia()) SnowballFight.scheduling().entitySpecificScheduler(hitEntity)
                     .run(() -> strikeLightning(hitEntity.getLocation()), null);
             else strikeLightning(hitEntity.getLocation());
             return;
@@ -104,7 +95,7 @@ public class LightningOnHit implements SnowballModule, Listener {
         final Block hitBlock = event.getHitBlock();
         if (hitBlock != null) {
             final Location hitBlockLoc = hitBlock.getLocation();
-            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().regionSpecificScheduler(hitBlockLoc)
+            if (SnowballFight.isServerFolia()) SnowballFight.scheduling().regionSpecificScheduler(hitBlockLoc)
                     .run(() -> strikeLightning(hitBlockLoc));
             else strikeLightning(hitBlockLoc);
         }

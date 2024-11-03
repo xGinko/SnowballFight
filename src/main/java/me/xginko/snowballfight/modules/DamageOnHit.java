@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.utils.Util;
 import org.bukkit.entity.EntityType;
@@ -19,16 +18,15 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DamageOnHit implements SnowballModule, Listener {
+public class DamageOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
     private final double damage;
     private final boolean onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
-    protected DamageOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.damage", "\nEnable snowballs dealing damage when they hit an entity.");
+    public DamageOnHit() {
+        super("settings.damage", false,
+                "\nEnable snowballs dealing damage when they hit an entity.");
         this.damage = config.getDouble("settings.damage.damage", 3.0,
                 "Configure the damage that entities take from getting hit by a snowball.");
         this.onlyPlayers = config.getBoolean("settings.damage.only-thrown-by-player", true,
@@ -44,8 +42,8 @@ public class DamageOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Damage) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })
@@ -54,13 +52,7 @@ public class DamageOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.damage.enable", false);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -70,7 +62,7 @@ public class DamageOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         if (!Util.isLivingEntity(event.getHitEntity())) return;
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
@@ -79,7 +71,7 @@ public class DamageOnHit implements SnowballModule, Listener {
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(livingEntity.getType()))) return;
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().entitySpecificScheduler(livingEntity)
+            SnowballFight.scheduling().entitySpecificScheduler(livingEntity)
                     .run(() -> livingEntity.damage(damage, event.getEntity()), null);
         } else {
             livingEntity.damage(damage, event.getEntity());

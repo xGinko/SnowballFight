@@ -16,13 +16,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.morepaperlib.MorePaperLib;
 import space.arim.morepaperlib.scheduling.GracefulScheduling;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
 public final class SnowballFight extends JavaPlugin {
 
     private static SnowballFight instance;
-    private static Cache<UUID, WrappedSnowball> cache;
+    private static Cache<UUID, WrappedSnowball> snowballs;
     private static SnowballConfig config;
     private static BukkitAudiences audiences;
     private static GracefulScheduling scheduling;
@@ -39,6 +40,7 @@ public final class SnowballFight extends JavaPlugin {
         scheduling = new MorePaperLib(instance).scheduling();
         logger = ComponentLogger.logger(getLogger().getName());
         metrics = new Metrics(this, 21271);
+        isServerFolia = Util.hasClass("io.papermc.paper.threadedregions.RegionizedServer");
 
         Style snowy = Style.style().decorate(TextDecoration.BOLD).color(TextColor.color(181,229,231)).build();
         logger.info(Component.text("                            ").style(snowy));
@@ -52,16 +54,10 @@ public final class SnowballFight extends JavaPlugin {
         logger.info(Component.text("         by xGinko          ").style(snowy));
         logger.info(Component.text("                            ").style(snowy));
 
-        isServerFolia = Util.hasClass("io.papermc.paper.threadedregions.RegionizedServer");
-        if (isServerFolia) logger.info("Detected Folia server.");
-
-        logger.info(Component.text("Loading Config"));
         reloadConfiguration();
 
-        logger.info(Component.text("Registering Commands"));
-        getCommand("snowballs").setExecutor(new SnowballsCommand());
-
-        logger.info(Component.text("Done."));
+        Objects.requireNonNull(getCommand("snowballs"), "Command isn't defined in the plugin.yml!")
+                .setExecutor(new SnowballsCommand());
     }
 
     @Override
@@ -80,20 +76,20 @@ public final class SnowballFight extends JavaPlugin {
         random = null;
         logger = null;
         config = null;
-        cache = null;
+        snowballs = null;
     }
 
     public void disableRunningTasks() {
         SnowballModule.disableAll();
         if (scheduling != null) scheduling.cancelGlobalTasks();
-        if (cache != null) cache.cleanUp();
+        if (snowballs != null) snowballs.cleanUp();
     }
 
     public void reloadConfiguration() {
         try {
             disableRunningTasks();
             config = new SnowballConfig();
-            cache = Caffeine.newBuilder().expireAfterWrite(config.cacheDuration).build();
+            snowballs = Caffeine.newBuilder().expireAfterWrite(config.cacheDuration).build();
             SnowballModule.reloadModules();
             config.saveConfig();
         } catch (Throwable e) {
@@ -105,20 +101,16 @@ public final class SnowballFight extends JavaPlugin {
         return instance;
     }
 
-    public static Cache<UUID, WrappedSnowball> getCache() {
-        return cache;
+    public static Cache<UUID, WrappedSnowball> snowballs() {
+        return snowballs;
     }
 
-    public static BukkitAudiences getAudiences() {
+    public static BukkitAudiences audiences() {
         return audiences;
     }
 
-    public static GracefulScheduling getScheduler() {
+    public static GracefulScheduling scheduling() {
         return scheduling;
-    }
-
-    public static boolean isServerFolia() {
-        return isServerFolia;
     }
 
     public static SnowballConfig config() {
@@ -131,5 +123,9 @@ public final class SnowballFight extends JavaPlugin {
 
     public static Random getRandom() {
         return random;
+    }
+
+    public static boolean isServerFolia() {
+        return isServerFolia;
     }
 }

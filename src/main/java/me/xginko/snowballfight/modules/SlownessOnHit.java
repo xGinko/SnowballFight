@@ -2,7 +2,6 @@ package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.XPotion;
-import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.utils.Util;
 import org.bukkit.entity.EntityType;
@@ -21,7 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SlownessOnHit implements SnowballModule, Listener {
+public class SlownessOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
     private final PotionEffect slowness;
@@ -29,9 +28,8 @@ public class SlownessOnHit implements SnowballModule, Listener {
     private final boolean onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected SlownessOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.slowness", "\nApply slowness effect to entities hit by snowballs.");
+        super("settings.slowness", false,
+                "\nApply slowness effect to entities hit by snowballs.");
         this.onlyPlayers = config.getBoolean("settings.slowness.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
         this.slowness = new PotionEffect(
@@ -52,8 +50,8 @@ public class SlownessOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Slowness) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })
@@ -62,13 +60,7 @@ public class SlownessOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.slowness.enable", false);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -78,7 +70,7 @@ public class SlownessOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         if (!Util.isLivingEntity(event.getHitEntity())) return;
 
@@ -89,7 +81,7 @@ public class SlownessOnHit implements SnowballModule, Listener {
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().entitySpecificScheduler(living)
+            SnowballFight.scheduling().entitySpecificScheduler(living)
                     .run(() -> living.addPotionEffect(slowness), null);
         } else {
             living.addPotionEffect(slowness);

@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -20,7 +19,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class KnockbackOnHit implements SnowballModule, Listener {
+public class KnockbackOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
     private final Vector vectorModifier;
@@ -28,9 +27,8 @@ public class KnockbackOnHit implements SnowballModule, Listener {
     private final boolean modifyVector, onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected KnockbackOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.knockback", "Modify knockback values on snowball hit.");
+        super("settings.knockback", true,
+                "\nModify knockback values on snowball hit.");
         this.onlyPlayers = config.getBoolean("settings.knockback.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
         this.multiplier = config.getDouble("settings.knockback.multiplier", 1.2,
@@ -52,8 +50,8 @@ public class KnockbackOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Knockback) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })
@@ -62,13 +60,7 @@ public class KnockbackOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.knockback.enable", true);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -78,7 +70,7 @@ public class KnockbackOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         final Entity hitEntity = event.getHitEntity();
         if (hitEntity == null) return;
@@ -88,7 +80,7 @@ public class KnockbackOnHit implements SnowballModule, Listener {
         if (onlyPlayers && !(snowball.getShooter() instanceof Player)) return;
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().entitySpecificScheduler(hitEntity).run(() -> {
+            SnowballFight.scheduling().entitySpecificScheduler(hitEntity).run(() -> {
                 if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
                 else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));
             }, null);

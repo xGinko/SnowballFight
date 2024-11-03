@@ -2,7 +2,6 @@ package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.XMaterial;
-import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,17 +24,15 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SnowOnHit implements SnowballModule, Listener {
+public class SnowOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
     private final int snowPatchRadius;
-    private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist;
-    private boolean powderSnowEnabled, onlyPlayers;
+    private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist, onlyPlayers;
+    private boolean powderSnowEnabled;
 
     protected SnowOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.snow",
+        super("settings.snow", true,
                 "\nCovers the hit block in snow.");
         this.onlyPlayers = config.getBoolean("settings.snow.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
@@ -51,7 +48,7 @@ public class SnowOnHit implements SnowballModule, Listener {
                 "Of course only works if your minecraft version has powder snow.");
         if (powderSnowEnabled && !XMaterial.POWDER_SNOW.isSupported()) {
             powderSnowEnabled = false;
-            SnowballFight.logger().warn("(Snow) Your server version does not support powder snow. Using regular snow.");
+            warn("Your server version does not support powder snow. Using regular snow.");
             config.master().set("settings.snow.stack-snow-layer.full-layers.use-powder-snow", false);
         }
         this.onlyForEntities = config.getBoolean("settings.snow.only-for-entities", false,
@@ -69,8 +66,8 @@ public class SnowOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Snow) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })
@@ -79,13 +76,7 @@ public class SnowOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.snow.enable", true);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -95,7 +86,7 @@ public class SnowOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
         final Entity hitEntity = event.getHitEntity();
@@ -119,7 +110,7 @@ public class SnowOnHit implements SnowballModule, Listener {
 
     private void coverWithSnowAt(Block startBlock) {
         final Location hitLoc = startBlock.getLocation().toCenterLocation();
-        SnowballFight.getScheduler().regionSpecificScheduler(hitLoc).runDelayed(() -> {
+        SnowballFight.scheduling().regionSpecificScheduler(hitLoc).runDelayed(() -> {
             World world = hitLoc.getWorld();
             int centerX = hitLoc.getBlockX();
             int centerY = hitLoc.getBlockY();

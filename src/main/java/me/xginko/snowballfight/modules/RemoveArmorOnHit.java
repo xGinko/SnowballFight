@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -19,15 +18,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RemoveArmorOnHit implements SnowballModule, Listener {
+public class RemoveArmorOnHit extends SnowballModule implements Listener {
 
     private final Set<Material> materials;
     private final boolean onlyPlayers;
 
     protected RemoveArmorOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.drop-armor",
+        super("settings.drop-armor", false,
                 "\nWill remove and drop configured material in the armor slots if a player gets hit by a snowball.");
         this.onlyPlayers = config.getBoolean("settings.drop-armor.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
@@ -37,8 +34,8 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
                     try {
                         return Material.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Drop Armor) Configured material '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/Material.html", configuredType);
+                        warn("Material '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/Material.html");
                         return null;
                     }
                 })
@@ -47,13 +44,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.drop-armor.enable", false);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -63,7 +54,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         if (event.getHitEntity() == null || event.getHitEntity().getType() != XEntityType.PLAYER.get()) return;
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
@@ -78,7 +69,7 @@ public class RemoveArmorOnHit implements SnowballModule, Listener {
             ItemStack armorItem = armorContents[i];
             if (armorItem != null && materials.contains(armorItem.getType())) {
                 if (SnowballFight.isServerFolia()) {
-                    SnowballFight.getScheduler().entitySpecificScheduler(player)
+                    SnowballFight.scheduling().entitySpecificScheduler(player)
                             .run(() -> player.getWorld().dropItemNaturally(player.getLocation(), armorItem), null);
                 } else {
                     player.getWorld().dropItemNaturally(player.getLocation(), armorItem);

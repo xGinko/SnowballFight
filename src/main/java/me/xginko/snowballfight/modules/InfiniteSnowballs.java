@@ -1,8 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XMaterial;
-import me.xginko.snowballfight.SnowballConfig;
-import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -11,23 +9,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class InfiniteSnowballs implements SnowballModule, Listener {
+public class InfiniteSnowballs extends SnowballModule implements Listener {
 
     protected InfiniteSnowballs() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.infinite-snowballs",
+        super("settings.infinite-snowballs", false,
                 "\nIf enabled, will stop snowballs from being consumed for players.");
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.infinite-snowballs.enable", false);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 

@@ -3,8 +3,6 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import me.xginko.snowballfight.SnowballConfig;
-import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -21,17 +19,15 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-public class ThrowCoolDown implements SnowballModule, Listener {
+public class ThrowCoolDown extends SnowballModule implements Listener {
 
     private final Set<UUID> player_cooldowns, entity_cooldowns;
     private final Set<Location> block_cooldowns;
     private final boolean blockCooldownEnabled, entityCooldownEnabled;
 
     protected ThrowCoolDown() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.cooldown",
-                "Configure a cooldown delay between throwing snowballs for players.");
+        super("settings.cooldown", false,
+                "\nConfigure a cooldown delay between throwing snowballs for players.");
         this.player_cooldowns = Collections.newSetFromMap(Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
                 Math.max(1, config.getInt("settings.cooldown.players.delay-in-ticks", 10) * 50L)
         )).<UUID, Boolean>build().asMap());
@@ -46,13 +42,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.cooldown.enable", false);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -62,7 +52,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onPlayerLaunchSnowball(PlayerLaunchProjectileEvent event) {
+    private void onPlayerLaunchProjectile(PlayerLaunchProjectileEvent event) {
         if (event.getProjectile().getType() != XEntityType.SNOWBALL.get()) return;
 
         if (player_cooldowns.contains(event.getPlayer().getUniqueId())) {
@@ -74,7 +64,7 @@ public class ThrowCoolDown implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onEntityLaunch(ProjectileLaunchEvent event) {
+    private void onProjectileLaunch(ProjectileLaunchEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
         final ProjectileSource shooter = event.getEntity().getShooter();

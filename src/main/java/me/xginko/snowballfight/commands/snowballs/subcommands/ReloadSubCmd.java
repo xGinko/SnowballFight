@@ -30,7 +30,7 @@ public class ReloadSubCmd extends SubCommand {
         if (!sender.hasPermission("snowballfight.cmd.reload")) return;
 
         Util.sendMessage(sender, Component.text("Reloading SnowballFight...").color(NamedTextColor.WHITE));
-        SnowballFight.getScheduler().asyncScheduler().run(() -> {
+        SnowballFight.scheduling().asyncScheduler().run(() -> {
             SnowballFight.getInstance().reloadConfiguration();
             Util.sendMessage(sender, Component.text("Reload complete.").color(NamedTextColor.GREEN));
         });

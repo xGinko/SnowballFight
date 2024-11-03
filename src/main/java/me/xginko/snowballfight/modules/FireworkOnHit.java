@@ -2,9 +2,8 @@ package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
-import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import me.xginko.snowballfight.SnowballConfig;
+import com.google.common.collect.ImmutableList;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
 import org.bukkit.FireworkEffect;
@@ -34,19 +33,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class FireworkOnHit implements SnowballModule, Listener {
+public class FireworkOnHit extends SnowballModule implements Listener {
 
-    private final Cache<UUID, Boolean> snowballFireworks;
     private final List<FireworkEffect.Type> effectTypes;
     private final Set<EntityType> configuredTypes;
     private final boolean dealDamage, dealKnockback, flicker, trail, onlyForEntities, onlyForSpecificEntities,
             asBlacklist, onlyPlayers;
 
+    private Set<UUID> effectFireworks;
+
     protected FireworkOnHit() {
-        shouldEnable();
-        this.snowballFireworks = Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(2)).build();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.fireworks",
+        super("settings.fireworks", true,
                 "\nDetonate a firework when a snowball hits something for a cool effect.");
         this.onlyPlayers = config.getBoolean("settings.fireworks.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
@@ -66,13 +63,13 @@ public class FireworkOnHit implements SnowballModule, Listener {
                     try {
                         return FireworkEffect.Type.valueOf(effect);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Fireworks) FireworkEffect Type '{}' not recognized. Please use valid enums from:" +
-                                " https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html", effect);
+                        warn("FireworkEffectType '" + effect + "' not recognized. Please use valid enums from:" +
+                                " https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html");
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
         if (effectTypes.isEmpty()) {
             effectTypes.add(FireworkEffect.Type.BURST);
         }
@@ -101,23 +98,23 @@ public class FireworkOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.fireworks.enable", true);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
+        effectFireworks = Collections.newSetFromMap(Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofSeconds(2)).<UUID, Boolean>build().asMap());
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public void disable() {
         HandlerList.unregisterAll(this);
+        if (effectFireworks != null) {
+            effectFireworks.clear();
+            effectFireworks = null;
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
         final Entity hitEntity = event.getHitEntity();
@@ -129,7 +126,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         if (hitEntity != null) {
-            if (SnowballFight.isServerFolia()) SnowballFight.getScheduler().entitySpecificScheduler(hitEntity)
+            if (SnowballFight.isServerFolia()) SnowballFight.scheduling().entitySpecificScheduler(hitEntity)
                     .run(() -> detonateFirework(hitEntity.getLocation(), (Snowball) event.getEntity()), null);
             else detonateFirework(hitEntity.getLocation(), (Snowball) event.getEntity());
             return;
@@ -145,7 +142,7 @@ public class FireworkOnHit implements SnowballModule, Listener {
             else fireworkLoc = hitBlock.getLocation().toCenterLocation();
 
             if (SnowballFight.isServerFolia()) {
-                SnowballFight.getScheduler().regionSpecificScheduler(fireworkLoc)
+                SnowballFight.scheduling().regionSpecificScheduler(fireworkLoc)
                         .run(() -> detonateFirework(fireworkLoc, (Snowball) event.getEntity()));
             } else {
                 detonateFirework(hitBlock.getLocation(), (Snowball) event.getEntity());
@@ -156,10 +153,10 @@ public class FireworkOnHit implements SnowballModule, Listener {
     private void detonateFirework(final Location explosionLoc, final Snowball snowball) {
         Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
         if (!dealDamage || !dealKnockback)
-            this.snowballFireworks.put(firework.getUniqueId(), true); // store uuid to cancel damage by fireworks
+            effectFireworks.add(firework.getUniqueId()); // Cache uuid to cancel damage/knockback by fireworks
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();
-        WrappedSnowball wrappedSnowball = SnowballFight.getCache().get(snowball.getUniqueId(), k -> new WrappedSnowball(snowball));
+        WrappedSnowball wrappedSnowball = SnowballFight.snowballs().get(snowball.getUniqueId(), k -> new WrappedSnowball(snowball));
         meta.addEffect(FireworkEffect.builder()
                 .withColor(wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor())
                 .with(effectTypes.get(SnowballFight.getRandom().nextInt(effectTypes.size())))
@@ -172,15 +169,15 @@ public class FireworkOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onFireworkExplode(EntityDamageByEntityEvent event) {
-        if (!dealDamage && this.snowballFireworks.getIfPresent(event.getDamager().getUniqueId()) != null) {
+    private void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (!dealDamage && effectFireworks.contains(event.getDamager().getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onKnockback(EntityKnockbackByEntityEvent event) {
-        if (!dealKnockback && this.snowballFireworks.getIfPresent(event.getHitBy().getUniqueId()) != null) {
+    private void onEntityKnockbackByEntity(EntityKnockbackByEntityEvent event) {
+        if (!dealKnockback && effectFireworks.contains(event.getHitBy().getUniqueId())) {
             event.setCancelled(true);
         }
     }

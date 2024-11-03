@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import me.xginko.snowballfight.SnowballConfig;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
 import me.xginko.snowballfight.events.PreSnowballExplodeEvent;
@@ -23,17 +22,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ExplodeOnHit implements SnowballModule, Listener {
+public class ExplodeOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
     private final float explosionPower;
     private final boolean explosionSetFire, explosionBreakBlocks, onlyForEntities, onlyForSpecificEntities, asBlacklist,
             onlyPlayers;
 
-    protected ExplodeOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.explosions","\nMake snowballs explode when hitting something.");
+    public ExplodeOnHit() {
+        super("settings.explosions", true,
+                "\nMake snowballs explode when hitting something.");
         this.onlyPlayers = config.getBoolean("settings.explosions.only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
         this.explosionPower = config.getFloat("settings.explosions.power", 2.0F,
@@ -57,8 +55,8 @@ public class ExplodeOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Explosions) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })
@@ -67,13 +65,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.explosions.enable", true);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -83,7 +75,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
         final Entity hitEntity = event.getHitEntity();
@@ -111,7 +103,7 @@ public class ExplodeOnHit implements SnowballModule, Listener {
         final Snowball snowball = preSnowballExplodeEvent.getSnowball();
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().regionSpecificScheduler(explodeLoc).run(() -> {
+            SnowballFight.scheduling().regionSpecificScheduler(explodeLoc).run(() -> {
                 new PostSnowballExplodeEvent(
                         preSnowballExplodeEvent.getSnowball(),
                         preSnowballExplodeEvent.getHitEntity(),

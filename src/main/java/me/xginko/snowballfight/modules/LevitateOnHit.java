@@ -1,7 +1,7 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import me.xginko.snowballfight.SnowballConfig;
+import com.cryptomorin.xseries.XPotion;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.utils.Util;
 import org.bukkit.entity.EntityType;
@@ -13,7 +13,6 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -21,18 +20,17 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class LevitateOnHit implements SnowballModule, Listener {
+public class LevitateOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
     private final PotionEffect levitation;
     private final boolean onlyForSpecificEntities, asBlacklist, onlyPlayers;
 
     protected LevitateOnHit() {
-        shouldEnable();
-        SnowballConfig config = SnowballFight.config();
-        config.master().addComment("settings.levitation", "\nApply levitation effect on entities hit by snowballs.");
+        super("settings.levitation", false,
+                "\nApply levitation effect on entities hit by snowballs.");
         this.levitation = new PotionEffect(
-                PotionEffectType.LEVITATION,
+                XPotion.LEVITATION.getPotionEffectType(),
                 config.getInt("settings.levitation.duration-ticks", 6, "1 second = 20 ticks."),
                 config.getInt("settings.levitation.potion-amplifier", 48, "Vanilla amplifier of levitation is 1.")
         );
@@ -49,8 +47,8 @@ public class LevitateOnHit implements SnowballModule, Listener {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Levitation) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })
@@ -59,13 +57,7 @@ public class LevitateOnHit implements SnowballModule, Listener {
     }
 
     @Override
-    public boolean shouldEnable() {
-        return SnowballFight.config().getBoolean("settings.levitation.enable", false);
-    }
-
-    @Override
     public void enable() {
-        SnowballFight plugin = SnowballFight.getInstance();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -75,7 +67,7 @@ public class LevitateOnHit implements SnowballModule, Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onSnowballHit(ProjectileHitEvent event) {
+    private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         if (!Util.isLivingEntity(event.getHitEntity())) return;
 
@@ -85,7 +77,7 @@ public class LevitateOnHit implements SnowballModule, Listener {
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.getScheduler().entitySpecificScheduler(living)
+            SnowballFight.scheduling().entitySpecificScheduler(living)
                     .run(() -> living.addPotionEffect(levitation), null);
         } else {
             living.addPotionEffect(levitation);
