@@ -33,10 +33,10 @@ public final class SnowballFight extends JavaPlugin {
     public void onEnable() {
         instance = this;
         random = new Random();
-        audiences = BukkitAudiences.create(this);
+        audiences = BukkitAudiences.create(instance);
         scheduling = new MorePaperLib(instance).scheduling();
         logger = ComponentLogger.logger(getLogger().getName());
-        metrics = new Metrics(this, 21271);
+        metrics = new Metrics(instance, 21271);
         isServerFolia = Util.hasClass("io.papermc.paper.threadedregions.RegionizedServer");
 
         logger.info(Component.text("                            ").style(Util.SNOWY_WHITE_BOLD));
