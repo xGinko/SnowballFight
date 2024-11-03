@@ -7,9 +7,6 @@ import me.xginko.snowballfight.modules.SnowballModule;
 import me.xginko.snowballfight.utils.Util;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -42,17 +39,16 @@ public final class SnowballFight extends JavaPlugin {
         metrics = new Metrics(this, 21271);
         isServerFolia = Util.hasClass("io.papermc.paper.threadedregions.RegionizedServer");
 
-        Style snowy = Style.style().decorate(TextDecoration.BOLD).color(TextColor.color(181,229,231)).build();
-        logger.info(Component.text("                            ").style(snowy));
-        logger.info(Component.text("           ██████           ").style(snowy));
-        logger.info(Component.text("         ██████████         ").style(snowy));
-        logger.info(Component.text("        ████████████        ").style(snowy));
-        logger.info(Component.text("         ██████████         ").style(snowy));
-        logger.info(Component.text("           ██████           ").style(snowy));
-        logger.info(Component.text("                            ").style(snowy));
-        logger.info(Component.text("       Snowball Fight       ").style(snowy));
-        logger.info(Component.text("         by xGinko          ").style(snowy));
-        logger.info(Component.text("                            ").style(snowy));
+        logger.info(Component.text("                            ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("           ██████           ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("         ██████████         ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("        ████████████        ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("         ██████████         ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("           ██████           ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("                            ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("       Snowball Fight       ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("         by xGinko          ").style(Util.SNOWY_WHITE_BOLD));
+        logger.info(Component.text("                            ").style(Util.SNOWY_WHITE_BOLD));
 
         reloadConfiguration();
 
