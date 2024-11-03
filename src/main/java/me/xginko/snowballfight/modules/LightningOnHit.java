@@ -2,6 +2,7 @@ package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.SnowballFight;
+import me.xginko.snowballfight.utils.Util;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -75,7 +76,7 @@ public class LightningOnHit extends SnowballModule implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
-        if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;
+        if (probability < 1.0 && Util.RANDOM.nextDouble() > probability) return;
 
         final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {

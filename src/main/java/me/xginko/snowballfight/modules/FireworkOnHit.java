@@ -6,6 +6,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableList;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
+import me.xginko.snowballfight.utils.Util;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -157,10 +158,10 @@ public class FireworkOnHit extends SnowballModule implements Listener {
             effectFireworks.add(firework.getUniqueId()); // Cache uuid to cancel damage/knockback by fireworks
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();
-        WrappedSnowball wrappedSnowball = SnowballFight.snowballs().get(snowball.getUniqueId(), k -> new WrappedSnowball(snowball));
+        WrappedSnowball wrappedSnowball = SnowballFight.snowballs().get(snowball);
         meta.addEffect(FireworkEffect.builder()
                 .withColor(wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor())
-                .with(effectTypes.get(SnowballFight.getRandom().nextInt(effectTypes.size())))
+                .with(effectTypes.get(Util.RANDOM.nextInt(effectTypes.size())))
                 .flicker(flicker)
                 .trail(trail)
                 .build());

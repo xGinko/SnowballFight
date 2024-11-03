@@ -99,46 +99,31 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
 
         if (!preSnowballExplodeEvent.callEvent()) return;
 
-        final Location explodeLoc = preSnowballExplodeEvent.getExplodeLocation();
         final Snowball snowball = preSnowballExplodeEvent.getSnowball();
+        final Location explodeLoc = preSnowballExplodeEvent.getExplodeLocation();
 
-        if (SnowballFight.isServerFolia()) {
-            SnowballFight.scheduling().regionSpecificScheduler(explodeLoc).run(() -> {
-                new PostSnowballExplodeEvent(
-                        preSnowballExplodeEvent.getSnowball(),
-                        preSnowballExplodeEvent.getHitEntity(),
+        PostSnowballExplodeEvent postSnowballExplodeEvent = new PostSnowballExplodeEvent(
+                preSnowballExplodeEvent.getSnowball(),
+                preSnowballExplodeEvent.getHitEntity(),
+                explodeLoc,
+                preSnowballExplodeEvent.getExplosionPower(),
+                preSnowballExplodeEvent.willSetFire(),
+                preSnowballExplodeEvent.willBreakBlocks(),
+                explodeLoc.getWorld().createExplosion(
+                        // Set explode source for damage tracking
+                        snowball.getShooter() instanceof LivingEntity ? (LivingEntity) snowball.getShooter() : snowball,
                         explodeLoc,
                         preSnowballExplodeEvent.getExplosionPower(),
                         preSnowballExplodeEvent.willSetFire(),
-                        preSnowballExplodeEvent.willBreakBlocks(),
-                        explodeLoc.getWorld().createExplosion(
-                                // Set explode source for damage tracking
-                                snowball.getShooter() instanceof LivingEntity ? (LivingEntity) snowball.getShooter() : snowball,
-                                explodeLoc,
-                                preSnowballExplodeEvent.getExplosionPower(),
-                                preSnowballExplodeEvent.willSetFire(),
-                                preSnowballExplodeEvent.willBreakBlocks()
-                        ),
-                        false
-                ).callEvent();
-            });
+                        preSnowballExplodeEvent.willBreakBlocks()
+                ),
+                event.isAsynchronous()
+        );
+
+        if (SnowballFight.isServerFolia()) {
+            SnowballFight.scheduling().regionSpecificScheduler(explodeLoc).run(postSnowballExplodeEvent::callEvent);
         } else {
-            new PostSnowballExplodeEvent(
-                    preSnowballExplodeEvent.getSnowball(),
-                    preSnowballExplodeEvent.getHitEntity(),
-                    explodeLoc,
-                    preSnowballExplodeEvent.getExplosionPower(),
-                    preSnowballExplodeEvent.willSetFire(),
-                    preSnowballExplodeEvent.willBreakBlocks(),
-                    explodeLoc.getWorld().createExplosion(
-                            snowball.getShooter() instanceof LivingEntity ? (LivingEntity) snowball.getShooter() : snowball,
-                            explodeLoc,
-                            preSnowballExplodeEvent.getExplosionPower(),
-                            preSnowballExplodeEvent.willSetFire(),
-                            preSnowballExplodeEvent.willBreakBlocks()
-                    ),
-                    event.isAsynchronous()
-            ).callEvent();
+            postSnowballExplodeEvent.callEvent();
         }
     }
 }

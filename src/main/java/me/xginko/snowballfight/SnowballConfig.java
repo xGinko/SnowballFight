@@ -2,10 +2,12 @@ package me.xginko.snowballfight;
 
 import com.google.common.collect.ImmutableList;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import me.xginko.snowballfight.utils.Util;
 import org.bukkit.Color;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -15,18 +17,16 @@ import java.util.stream.Collectors;
 public final class SnowballConfig {
 
     private final @NotNull ConfigFile configFile;
+
     public final @NotNull List<Color> colors;
-    public final @NotNull Duration cacheDuration;
+    public final @NotNull Duration snowballCacheDuration;
 
     SnowballConfig() throws Exception {
-        // Create plugin folder first if it does not exist yet
         File pluginFolder = SnowballFight.getInstance().getDataFolder();
-        if (!pluginFolder.exists() && !pluginFolder.mkdir())
-            SnowballFight.logger().error("Failed to create plugin folder.");
-        // Load config.yml with ConfigMaster
+        Files.createDirectories(pluginFolder.toPath());
         this.configFile = ConfigFile.loadConfig(new File(pluginFolder, "config.yml"));
 
-        this.cacheDuration = Duration.ofSeconds(getInt("settings.cache-keep-seconds", 20,
+        this.snowballCacheDuration = Duration.ofSeconds(getInt("settings.snowball-cache-seconds", 20,
                 "Don't touch unless you know what you're doing."));
 
         final List<String> defaults = Arrays.asList(
@@ -41,15 +41,9 @@ public final class SnowballConfig {
         this.colors = getList("settings.colors", defaults,
                 "You need to configure at least 1 color. Format: 'B3E3F4' or '#B3E3F4'")
                 .stream()
-                .distinct()
                 .map(hexString -> {
                     try {
-                        final String parseable = hexString.replace("#", "");
-                        return Color.fromRGB(
-                                Integer.parseInt(parseable.substring(0, 2), 16),
-                                Integer.parseInt(parseable.substring(2, 4), 16),
-                                Integer.parseInt(parseable.substring(4, 6), 16)
-                        );
+                        return Util.colorFromHexString(hexString);
                     } catch (NumberFormatException e) {
                         SnowballFight.logger().warn("Could not parse color '{}'. Is it formatted correctly?", hexString);
                         return null;
@@ -57,27 +51,15 @@ public final class SnowballConfig {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.collectingAndThen(Collectors.toList(), collected -> {
-                    if (collected.isEmpty()) {
-                        collected.addAll(defaults.stream()
-                                .map(string -> {
-                                    try {
-                                        return Color.fromRGB(
-                                                Integer.parseInt(string.substring(0, 2), 16),
-                                                Integer.parseInt(string.substring(2, 4), 16),
-                                                Integer.parseInt(string.substring(4, 6), 16));
-                                    } catch (Exception e) {
-                                        return Color.WHITE;
-                                    }
-                                })
-                                .distinct()
-                                .collect(Collectors.toList()));
-                    }
+                    if (collected.isEmpty())
+                        collected.addAll(defaults.stream().map(Util::colorFromHexString).collect(Collectors.toList()));
                     return ImmutableList.copyOf(collected);
                 }));
-        structure();
+
+        setStructure();
     }
 
-    public void structure() {
+    public void setStructure() {
         configFile.addDefault("settings.cooldown", null);
         configFile.addDefault("settings.infinite-snowballs", null);
         configFile.addDefault("settings.damage", null);

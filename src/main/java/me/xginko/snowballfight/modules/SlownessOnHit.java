@@ -76,7 +76,7 @@ public class SlownessOnHit extends SnowballModule implements Listener {
 
         final LivingEntity living = (LivingEntity) event.getHitEntity();
         if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(living.getType()))) return;
-        if (probability < 1.0 && SnowballFight.getRandom().nextDouble() > probability) return;
+        if (probability < 1.0 && Util.RANDOM.nextDouble() > probability) return;
 
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
