@@ -26,9 +26,9 @@ public class RemoveArmorOnHit extends SnowballModule implements Listener {
     protected RemoveArmorOnHit() {
         super("settings.drop-armor", false,
                 "\nWill remove and drop configured material in the armor slots if a player gets hit by a snowball.");
-        this.onlyPlayers = config.getBoolean("settings.drop-armor.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.materials = config.getList("settings.drop-armor.materials", Collections.singletonList("ELYTRA"))
+        this.materials = config.getList(configPath + ".materials", Collections.singletonList("ELYTRA"))
                 .stream()
                 .map(configuredType -> {
                     try {

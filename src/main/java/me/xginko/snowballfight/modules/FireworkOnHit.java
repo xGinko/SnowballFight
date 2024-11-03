@@ -45,17 +45,17 @@ public class FireworkOnHit extends SnowballModule implements Listener {
     protected FireworkOnHit() {
         super("settings.fireworks", true,
                 "\nDetonate a firework when a snowball hits something for a cool effect.");
-        this.onlyPlayers = config.getBoolean("settings.fireworks.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.dealDamage = config.getBoolean("settings.fireworks.deal-damage", false,
+        this.dealDamage = config.getBoolean(configPath + ".deal-damage", false,
                 "Should firework effects deal damage like regular fireworks?");
-        this.dealKnockback = config.getBoolean("settings.fireworks.deal-knockback", false,
+        this.dealKnockback = config.getBoolean(configPath + ".deal-knockback", false,
                 "Should firework effects deal knockback like regular fireworks?");
-        this.trail = config.getBoolean("settings.fireworks.trail", true,
+        this.trail = config.getBoolean(configPath + ".trail", true,
                 "Whether the firework particles should leave trails.");
-        this.flicker = config.getBoolean("settings.fireworks.flicker", false,
+        this.flicker = config.getBoolean(configPath + ".flicker", false,
                 "Whether the firework particles should flicker.");
-        this.effectTypes = config.getList("settings.fireworks.types", Arrays.asList("BURST", "BALL"), 
+        this.effectTypes = config.getList(configPath + ".types", Arrays.asList("BURST", "BALL"),
                         "FireworkEffect Types you wish to use. Has to be a valid enum from:\n" +
                         "https://jd.papermc.io/paper/1.20/org/bukkit/FireworkEffect.Type.html")
                 .stream()
@@ -69,27 +69,28 @@ public class FireworkOnHit extends SnowballModule implements Listener {
                     }
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
-        if (effectTypes.isEmpty()) {
-            effectTypes.add(FireworkEffect.Type.BURST);
-        }
-        this.onlyForEntities = config.getBoolean("settings.fireworks.only-for-entities", false,
+                .collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
+                    if (list.isEmpty())
+                        list.add(FireworkEffect.Type.BURST);
+                    return ImmutableList.copyOf(list);
+                }));
+        this.onlyForEntities = config.getBoolean(configPath + ".only-for-entities", false,
                 "Enable if you only want explosions to happen when a snowball hits an entity.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.fireworks.only-for-specific-entities", false,
+        this.onlyForSpecificEntities = config.getBoolean(configPath + ".only-for-specific-entities", false,
                 "When enabled, snowballs will only explode for the configured entity types below.\n" +
                 "Needs only-for-entities to be set to true.");
-        this.asBlacklist = config.getBoolean("settings.fireworks.use-list-as-blacklist", false,
+        this.asBlacklist = config.getBoolean(configPath + ".use-list-as-blacklist", false,
                 "Setting this and only-for-specific-entities to true will mean there will only be a firework effect\n" +
                 "if the hit entity is NOT on this list.");
-        this.configuredTypes = config.getList("settings.fireworks.specific-entity-types", Collections.singletonList("PLAYER"),
+        this.configuredTypes = config.getList(configPath + ".specific-entity-types", Collections.singletonList("PLAYER"),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
                 .stream()
                 .map(configuredType -> {
                     try {
                         return EntityType.valueOf(configuredType);
                     } catch (IllegalArgumentException e) {
-                        SnowballFight.logger().warn("(Fireworks) Configured entity type '{}' not recognized. " +
-                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html", configuredType);
+                        warn("EntityType '" + configuredType + "' not recognized. " +
+                                "Please use correct values from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html");
                         return null;
                     }
                 })

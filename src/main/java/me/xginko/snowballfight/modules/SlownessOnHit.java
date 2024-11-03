@@ -30,20 +30,20 @@ public class SlownessOnHit extends SnowballModule implements Listener {
     protected SlownessOnHit() {
         super("settings.slowness", false,
                 "\nApply slowness effect to entities hit by snowballs.");
-        this.onlyPlayers = config.getBoolean("settings.slowness.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
         this.slowness = new PotionEffect(
                 XPotion.SLOWNESS.getPotionEffectType(),
-                config.getInt("settings.slowness.duration-ticks", 40, "1 second = 20 ticks."),
-                config.getInt("settings.slowness.potion-amplifier", 2, "Vanilla amplifier can be up to 2.")
+                config.getInt(configPath + ".duration-ticks", 40, "1 second = 20 ticks."),
+                config.getInt(configPath + ".potion-amplifier", 2, "Vanilla amplifier can be up to 2.")
         );
-        this.probability = config.getDouble("settings.slowness.chance", 0.10,
+        this.probability = config.getDouble(configPath + ".chance", 0.10,
                 "Chance effect is applied on hit as double (100% = 1.00)");
-        this.onlyForSpecificEntities = config.getBoolean("settings.slowness.only-for-specific-entities", false,
+        this.onlyForSpecificEntities = config.getBoolean(configPath + ".only-for-specific-entities", false,
                 "When enabled, only configured entities will be slowed when hit by a snowball.");
-        this.asBlacklist = config.getBoolean("settings.slowness.use-list-as-blacklist", false,
+        this.asBlacklist = config.getBoolean(configPath + ".use-list-as-blacklist", false,
                 "All entities except the ones on this list will be slowed when hit by a snowball if set to true.");
-        this.configuredTypes = config.getList("settings.slowness.specific-entity-types", Collections.singletonList("PLAYER"),
+        this.configuredTypes = config.getList(configPath + ".specific-entity-types", Collections.singletonList("PLAYER"),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
                 .stream()
                 .map(configuredType -> {

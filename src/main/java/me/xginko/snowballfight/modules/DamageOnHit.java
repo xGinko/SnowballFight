@@ -27,15 +27,15 @@ public class DamageOnHit extends SnowballModule implements Listener {
     public DamageOnHit() {
         super("settings.damage", false,
                 "\nEnable snowballs dealing damage when they hit an entity.");
-        this.damage = config.getDouble("settings.damage.damage", 3.0,
+        this.damage = config.getDouble(configPath + ".damage", 3.0,
                 "Configure the damage that entities take from getting hit by a snowball.");
-        this.onlyPlayers = config.getBoolean("settings.damage.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.damage.only-for-specific-entities", false,
+        this.onlyForSpecificEntities = config.getBoolean(configPath + ".only-for-specific-entities", false,
                 "When enabled, only configured entities will take extra damage when hit by a snowball.");
-        this.asBlacklist = config.getBoolean("settings.damage.use-list-as-blacklist", false,
+        this.asBlacklist = config.getBoolean(configPath + ".use-list-as-blacklist", false,
                 "All entities except the ones on this list will take damage when hit by a snowball if set to true.");
-        this.configuredTypes = config.getList("settings.damage.specific-entity-types", Collections.singletonList("PLAYER"),
+        this.configuredTypes = config.getList(configPath + ".specific-entity-types", Collections.singletonList("PLAYER"),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
                 .stream()
                 .map(configuredType -> {

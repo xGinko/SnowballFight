@@ -31,16 +31,16 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
     protected TrailsWhenThrown() {
         super("settings.trails", true,
                 "\nSpawn colored particle trails when a snowball is launched.");
-        this.onlyPlayers = config.getBoolean("settings.trails.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.particlesPerTick = config.getInt("settings.trails.particles-per-tick", 10,
+        this.particlesPerTick = config.getInt(configPath + ".particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low.");
-        this.maxTrailTaskAliveTime = TimeUnit.SECONDS.toMillis(config.getInt("settings.trails.max-trail-task-alive-time-seconds", 20,
+        this.maxTrailTaskAliveTime = TimeUnit.SECONDS.toMillis(config.getInt(configPath + ".max-trail-task-alive-time-seconds", 20,
                 "How many seconds until the trails will no longer be generated on the same snowball to save resources."));
-        this.initialDelay = Math.max(1, config.getInt("settings.trails.initial-delay-ticks", 3,
+        this.initialDelay = Math.max(1, config.getInt(configPath + ".initial-delay-ticks", 3,
                 "Time in ticks after throwing snowball until trails should begin to generate." +
                 "Recommended: At least 2 ticks delay so the particles don't obstruct the players view."));
-        this.period = Math.max(1, config.getInt("settings.trails.repeat-delay-ticks", 1,
+        this.period = Math.max(1, config.getInt(configPath + ".repeat-delay-ticks", 1,
                 "How often per tick a particle should be spawned.\n" +
                 "Recommended: 1 tick delay to get the best looking trails."));
     }

@@ -31,16 +31,16 @@ public class LevitateOnHit extends SnowballModule implements Listener {
                 "\nApply levitation effect on entities hit by snowballs.");
         this.levitation = new PotionEffect(
                 XPotion.LEVITATION.getPotionEffectType(),
-                config.getInt("settings.levitation.duration-ticks", 6, "1 second = 20 ticks."),
-                config.getInt("settings.levitation.potion-amplifier", 48, "Vanilla amplifier of levitation is 1.")
+                config.getInt(configPath + ".duration-ticks", 6, "1 second = 20 ticks."),
+                config.getInt(configPath + ".potion-amplifier", 48, "Vanilla amplifier of levitation is 1.")
         );
-        this.onlyPlayers = config.getBoolean("settings.levitation.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.levitation.only-for-specific-entities", false,
+        this.onlyForSpecificEntities = config.getBoolean(configPath + ".only-for-specific-entities", false,
                 "When enabled, only configured entities will levitate when hit by a snowball.");
-        this.asBlacklist = config.getBoolean("settings.levitation.use-list-as-blacklist", false,
+        this.asBlacklist = config.getBoolean(configPath + ".use-list-as-blacklist", false,
                 "All entities except the ones on this list will levitate when hit by a snowball if set to true.");
-        this.configuredTypes = config.getList("settings.levitation.specific-entity-types", Collections.singletonList("PLAYER"),
+        this.configuredTypes = config.getList(configPath + ".specific-entity-types", Collections.singletonList("PLAYER"),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
                 .stream()
                 .map(configuredType -> {

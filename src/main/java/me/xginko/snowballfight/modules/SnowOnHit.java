@@ -34,32 +34,32 @@ public class SnowOnHit extends SnowballModule implements Listener {
     protected SnowOnHit() {
         super("settings.snow", true,
                 "\nCovers the hit block in snow.");
-        this.onlyPlayers = config.getBoolean("settings.snow.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.snowPatchRadius = config.getInt("settings.snow.size", 2,
+        this.snowPatchRadius = config.getInt(configPath + ".size", 2,
                 "How big the snow patch should be that the snowball leaves as block radius.");
-        this.formIce = config.getBoolean("settings.snow.form-ice", true,
+        this.formIce = config.getBoolean(configPath + ".form-ice", true,
                 "Turns water to ice when hit.");
-        this.addSnowLayer = config.getBoolean("settings.snow.stack-snow-layer.enable", true,
+        this.addSnowLayer = config.getBoolean(configPath + ".stack-snow-layer.enable", true,
                 "Adds snow on top of existing snow layers.");
-        this.replaceFullLayer = config.getBoolean("settings.snow.stack-snow-layer.full-layers.turn-to-blocks", false,
+        this.replaceFullLayer = config.getBoolean(configPath + ".stack-snow-layer.full-layers.turn-to-blocks", false,
                 "Recommended to leave off if you want the snow layers to be able to melt away.");
-        this.powderSnowEnabled = config.getBoolean("settings.snow.stack-snow-layer.full-layers.use-powder-snow", XMaterial.POWDER_SNOW.isSupported(),
+        this.powderSnowEnabled = config.getBoolean(configPath + ".stack-snow-layer.full-layers.use-powder-snow", XMaterial.POWDER_SNOW.isSupported(),
                 "Of course only works if your minecraft version has powder snow.");
         if (powderSnowEnabled && !XMaterial.POWDER_SNOW.isSupported()) {
             powderSnowEnabled = false;
             warn("Your server version does not support powder snow. Using regular snow.");
-            config.master().set("settings.snow.stack-snow-layer.full-layers.use-powder-snow", false);
+            config.master().set(configPath + ".stack-snow-layer.full-layers.use-powder-snow", false);
         }
-        this.onlyForEntities = config.getBoolean("settings.snow.only-for-entities", false,
+        this.onlyForEntities = config.getBoolean(configPath + ".only-for-entities", false,
                 "Enable if you only want snow to spread when snowballs hit an entity.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.snow.only-for-specific-entities", false, 
+        this.onlyForSpecificEntities = config.getBoolean(configPath + ".only-for-specific-entities", false,
                 "When enabled, snowballs will only spread snow for the configured entity types below.\n" +
                 "Needs only-for-entities to be set to true.");
-        this.asBlacklist = config.getBoolean("settings.snow.use-list-as-blacklist", false, 
+        this.asBlacklist = config.getBoolean(configPath + ".use-list-as-blacklist", false,
                 "Setting this and only-for-specific-entities to true will mean there won't be snow spreading\n" +
                 "when one of the configured entities are hit by a snowball.");
-        this.configuredTypes = config.getList("settings.snow.specific-entity-types", Arrays.asList("PLAYER", "WITHER"),
+        this.configuredTypes = config.getList(configPath + ".specific-entity-types", Arrays.asList("PLAYER", "WITHER"),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
                 .stream()
                 .map(configuredType -> {

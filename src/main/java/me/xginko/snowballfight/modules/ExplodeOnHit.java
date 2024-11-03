@@ -32,23 +32,23 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
     public ExplodeOnHit() {
         super("settings.explosions", true,
                 "\nMake snowballs explode when hitting something.");
-        this.onlyPlayers = config.getBoolean("settings.explosions.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.explosionPower = config.getFloat("settings.explosions.power", 2.0F,
+        this.explosionPower = config.getFloat(configPath + ".power", 2.0F,
                 "TNT has a power of 4.0.");
-        this.explosionSetFire = config.getBoolean("settings.explosions.set-fire", false,
+        this.explosionSetFire = config.getBoolean(configPath + ".set-fire", false,
                 "Enable explosion fire like with respawn anchors.");
-        this.explosionBreakBlocks = config.getBoolean("settings.explosions.break-blocks", true,
+        this.explosionBreakBlocks = config.getBoolean(configPath + ".break-blocks", true,
                 "Enable destruction of nearby blocks.");
-        this.onlyForEntities = config.getBoolean("settings.explosions.only-for-entities", false,
+        this.onlyForEntities = config.getBoolean(configPath + ".only-for-entities", false,
                 "Enable if you only want explosions to happen when snowballs hit an entity.");
-        this.onlyForSpecificEntities = config.getBoolean("settings.explosions.only-for-specific-entities", false, 
+        this.onlyForSpecificEntities = config.getBoolean(configPath + ".only-for-specific-entities", false,
                 "When enabled, snowballs will only explode for the configured entity types below.\n" +
                 "Needs only-for-entities to be set to true.");
-        this.asBlacklist = config.getBoolean("settings.explosions.use-list-as-blacklist", false, 
+        this.asBlacklist = config.getBoolean(configPath + ".use-list-as-blacklist", false,
                 "Setting this and only-for-specific-entities to true will mean there won't be an explosion \n" +
                 "when one of the configured entities are hit by a snowball.");
-        this.configuredTypes = config.getList("settings.explosions.specific-entity-types", Arrays.asList("PLAYER", "WITHER"),
+        this.configuredTypes = config.getList(configPath + ".specific-entity-types", Arrays.asList("PLAYER", "WITHER"),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
                 .stream()
                 .map(configuredType -> {

@@ -29,15 +29,15 @@ public class ThrowCoolDown extends SnowballModule implements Listener {
         super("settings.cooldown", false,
                 "\nConfigure a cooldown delay between throwing snowballs for players.");
         this.player_cooldowns = Collections.newSetFromMap(Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
-                Math.max(1, config.getInt("settings.cooldown.players.delay-in-ticks", 10) * 50L)
+                Math.max(1, config.getInt(configPath + ".players.delay-in-ticks", 10) * 50L)
         )).<UUID, Boolean>build().asMap());
-        this.entityCooldownEnabled = config.getBoolean("settings.cooldown.entities.enable", false);
+        this.entityCooldownEnabled = config.getBoolean(configPath + ".entities.enable", false);
         this.entity_cooldowns = Collections.newSetFromMap(Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
-                Math.max(1, config.getInt("settings.cooldown.entities.delay-in-ticks", 10) * 50L)
+                Math.max(1, config.getInt(configPath + ".entities.delay-in-ticks", 10) * 50L)
         )).<UUID, Boolean>build().asMap());
-        this.blockCooldownEnabled = config.getBoolean("settings.cooldown.blocks.enable", false);
+        this.blockCooldownEnabled = config.getBoolean(configPath + ".blocks.enable", false);
         this.block_cooldowns = Collections.newSetFromMap(Caffeine.newBuilder().expireAfterWrite(Duration.ofMillis(
-                Math.max(1, config.getInt("settings.cooldown.blocks.delay-in-ticks", 20) * 50L)
+                Math.max(1, config.getInt(configPath + ".blocks.delay-in-ticks", 20) * 50L)
         )).<Location, Boolean>build().asMap());
     }
 

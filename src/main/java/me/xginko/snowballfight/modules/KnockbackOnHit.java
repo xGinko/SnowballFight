@@ -29,21 +29,21 @@ public class KnockbackOnHit extends SnowballModule implements Listener {
     protected KnockbackOnHit() {
         super("settings.knockback", true,
                 "\nModify knockback values on snowball hit.");
-        this.onlyPlayers = config.getBoolean("settings.knockback.only-thrown-by-player", true,
+        this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.multiplier = config.getDouble("settings.knockback.multiplier", 1.2,
+        this.multiplier = config.getDouble(configPath + ".multiplier", 1.2,
                 "The multiplier for the knockback of the snowball.");
-        this.modifyVector = config.getBoolean("settings.knockback.vector-modifier.enable", true);
+        this.modifyVector = config.getBoolean(configPath + ".vector-modifier.enable", true);
         this.vectorModifier = new Vector(
-                config.getDouble("settings.knockback.vector-modifier.x", 0.0),
-                config.getDouble("settings.knockback.vector-modifier.y", 0.6),
-                config.getDouble("settings.knockback.vector-modifier.z", 0.0)
+                config.getDouble(configPath + ".vector-modifier.x", 0.0),
+                config.getDouble(configPath + ".vector-modifier.y", 0.6),
+                config.getDouble(configPath + ".vector-modifier.z", 0.0)
         );
-        this.onlyForSpecificEntities = config.getBoolean("settings.knockback.only-for-specific-entities", false,
+        this.onlyForSpecificEntities = config.getBoolean(configPath + ".only-for-specific-entities", false,
                 "When enabled, only configured entities will be knocked back by snowballs.");
-        this.asBlacklist = config.getBoolean("settings.knockback.use-list-as-blacklist", false,
+        this.asBlacklist = config.getBoolean(configPath + ".use-list-as-blacklist", false,
                 "All entities except the ones on this list will be knocked back by snowballs if set to true.");
-        this.configuredTypes = config.getList("settings.knockback.specific-entity-types", Collections.singletonList("PLAYER"),
+        this.configuredTypes = config.getList(configPath + ".specific-entity-types", Collections.singletonList("PLAYER"),
                 "Please use correct enums from: https://jd.papermc.io/paper/1.20/org/bukkit/entity/EntityType.html")
                 .stream()
                 .map(configuredType -> {
