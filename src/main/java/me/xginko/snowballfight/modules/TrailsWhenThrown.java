@@ -3,10 +3,6 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.particles.XParticle;
 import com.destroystokyo.paper.ParticleBuilder;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
-import com.github.benmanes.caffeine.cache.RemovalListener;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
 import org.bukkit.Location;
@@ -17,27 +13,29 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.morepaperlib.scheduling.ScheduledTask;
 
-import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
-public class TrailsWhenThrown extends SnowballModule implements RemovalListener<UUID, ScheduledTask>, Listener {
+public class TrailsWhenThrown extends SnowballModule implements Listener {
 
-    private final long maxTrailSeconds, initialDelayTicks, periodTicks;
+    private final long trailDurationMillis, initialDelayTicks, periodTicks;
     private final int particlesPerTick;
     private final boolean onlyPlayers;
 
-    private Cache<UUID, ScheduledTask> particleTracker;
+    private Map<UUID, ScheduledTask> particleTracker;
 
     protected TrailsWhenThrown() {
         super("settings.trails", true,
                 "\nSpawn colored particle trails when a snowball is launched.");
         this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.maxTrailSeconds = Math.max(1, config.getInt(configPath + ".trail-duration-seconds", 20));
+        this.trailDurationMillis = TimeUnit.SECONDS.toMillis(
+                Math.max(1, config.getInt(configPath + ".trail-duration-seconds", 20)));
         this.particlesPerTick = Math.max(1, config.getInt(configPath + ".particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low."));
         this.initialDelayTicks = Math.max(1, config.getInt(configPath + ".initial-delay-ticks", 3,
@@ -50,7 +48,7 @@ public class TrailsWhenThrown extends SnowballModule implements RemovalListener<
 
     @Override
     public void enable() {
-        particleTracker = Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(maxTrailSeconds)).evictionListener(this).build();
+        particleTracker = new ConcurrentHashMap<>();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -58,16 +56,10 @@ public class TrailsWhenThrown extends SnowballModule implements RemovalListener<
     public void disable() {
         HandlerList.unregisterAll(this);
         if (particleTracker != null) {
-            particleTracker.invalidateAll();
-            particleTracker.cleanUp();
+            particleTracker.forEach(((uuid, scheduledTask) -> scheduledTask.cancel()));
+            particleTracker.clear();
             particleTracker = null;
         }
-    }
-
-    @Override
-    public void onRemoval(@Nullable UUID uuid, @Nullable ScheduledTask scheduledTask, @NonNull RemovalCause cause) {
-        if (scheduledTask != null) // Shouldn't happen since we aren't using weakKeys but just in case
-            scheduledTask.cancel();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -76,7 +68,7 @@ public class TrailsWhenThrown extends SnowballModule implements RemovalListener<
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         final Snowball snowball = (Snowball) event.getEntity();
-        if (particleTracker.getIfPresent(snowball.getUniqueId()) != null) return;
+        if (particleTracker.containsKey(snowball.getUniqueId())) return;
 
         final WrappedSnowball wrappedSnowball = SnowballFight.snowballs().get(snowball);
 
@@ -87,10 +79,11 @@ public class TrailsWhenThrown extends SnowballModule implements RemovalListener<
                 .color(wrappedSnowball.getSecondaryColor())
                 .count(particlesPerTick);
 
+        final long expireTimeMillis = System.currentTimeMillis() + trailDurationMillis;
+
         @Nullable ScheduledTask particleTask = SnowballFight.scheduling().entitySpecificScheduler(snowball).runAtFixedRate(() -> {
-            if (snowball.isDead()) { // Stop the task because it would keep running until server restart on bukkit scheduler.
-                ScheduledTask task = particleTracker.getIfPresent(snowball.getUniqueId());
-                if (task != null) task.cancel();
+            if (snowball.isDead() || System.currentTimeMillis() >= expireTimeMillis) {
+                particleTracker.remove(snowball.getUniqueId()).cancel();
                 return;
             }
 
