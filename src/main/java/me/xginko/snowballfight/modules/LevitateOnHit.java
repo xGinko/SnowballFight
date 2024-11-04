@@ -29,8 +29,7 @@ public class LevitateOnHit extends SnowballModule implements Listener {
     protected LevitateOnHit() {
         super("settings.levitation", false,
                 "\nApply levitation effect on entities hit by snowballs.");
-        this.levitation = new PotionEffect(
-                XPotion.LEVITATION.getPotionEffectType(),
+        this.levitation = XPotion.LEVITATION.buildPotionEffect(
                 config.getInt(configPath + ".duration-ticks", 6, "1 second = 20 ticks."),
                 config.getInt(configPath + ".potion-amplifier", 48, "Vanilla amplifier of levitation is 1.")
         );
