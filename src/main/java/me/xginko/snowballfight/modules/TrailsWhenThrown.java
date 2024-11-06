@@ -5,7 +5,6 @@ import com.cryptomorin.xseries.particles.XParticle;
 import com.destroystokyo.paper.ParticleBuilder;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
@@ -84,14 +83,10 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
         @Nullable ScheduledTask particleTask = SnowballFight.scheduling().entitySpecificScheduler(snowball).runAtFixedRate(() -> {
             if (snowball.isDead() || System.currentTimeMillis() >= expireTimeMillis) {
                 particleTracker.remove(snowball.getUniqueId()).cancel();
-                return;
+            } else {
+                primary.location(snowball.getLocation()).spawn();
+                secondary.location(snowball.getLocation()).spawn();
             }
-
-            // Get new current location on each run
-            final Location snowballLoc = snowball.getLocation();
-            // Spawn particles using preconfigured ParticleBuilders
-            primary.location(snowballLoc).spawn();
-            secondary.location(snowballLoc).spawn();
         }, null, initialDelayTicks, periodTicks);
 
         if (particleTask != null) {
