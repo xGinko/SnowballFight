@@ -1,11 +1,10 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import me.xginko.snowballfight.utils.Util;
 import org.bukkit.Location;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -51,15 +50,27 @@ public class ThrowCoolDown extends SnowballModule implements Listener {
         HandlerList.unregisterAll(this);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onPlayerLaunchProjectile(PlayerLaunchProjectileEvent event) {
-        if (event.getProjectile().getType() != XEntityType.SNOWBALL.get()) return;
+    private static class PlayerLaunchProjectileListener implements Listener {
 
-        if (player_cooldowns.contains(event.getPlayer().getUniqueId())) {
-            event.setShouldConsume(false);
-            event.setCancelled(true);
-        } else {
-            player_cooldowns.add(event.getPlayer().getUniqueId());
+        private static final boolean
+                CAN_REGISTER = Util.hasClass("com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent");
+
+        private final Set<UUID> player_cooldowns;
+
+        public PlayerLaunchProjectileListener(Set<UUID> player_cooldowns) {
+            this.player_cooldowns = player_cooldowns;
+        }
+
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        private void onPlayerLaunchProjectile(com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent event) {
+            if (event.getProjectile().getType() != XEntityType.SNOWBALL.get()) return;
+
+            if (player_cooldowns.contains(event.getPlayer().getUniqueId())) {
+                event.setShouldConsume(false);
+                event.setCancelled(true);
+            } else {
+                player_cooldowns.add(event.getPlayer().getUniqueId());
+            }
         }
     }
 
@@ -69,17 +80,26 @@ public class ThrowCoolDown extends SnowballModule implements Listener {
 
         final ProjectileSource shooter = event.getEntity().getShooter();
 
-        if (entityCooldownEnabled && shooter instanceof LivingEntity) {
-            LivingEntity livingShooter = (LivingEntity) shooter;
-            if (livingShooter.getType().equals(EntityType.PLAYER)) return; // Players in a different event due to item consumption.
-            if (entity_cooldowns.contains(livingShooter.getUniqueId())) event.setCancelled(true);
-            else entity_cooldowns.add(livingShooter.getUniqueId());
+        if (shooter instanceof Entity) {
+            Entity entityShooter = (Entity) shooter;
+
+            if (entityShooter.getType() == XEntityType.PLAYER.get()) {
+                if (!PlayerLaunchProjectileListener.CAN_REGISTER) {
+                    if (player_cooldowns.contains(entityShooter.getUniqueId())) event.setCancelled(true);
+                    else player_cooldowns.add(entityShooter.getUniqueId());
+                }
+            }
+
+            else if (entityCooldownEnabled) {
+                if (entity_cooldowns.contains(entityShooter.getUniqueId())) event.setCancelled(true);
+                else entity_cooldowns.add(entityShooter.getUniqueId());
+            }
+
             return;
         }
 
         if (blockCooldownEnabled && shooter instanceof BlockProjectileSource) {
-            BlockProjectileSource blockShooter = (BlockProjectileSource) shooter;
-            final Location blockLocation = blockShooter.getBlock().getLocation();
+            final Location blockLocation = ((BlockProjectileSource) shooter).getBlock().getLocation();
             if (block_cooldowns.contains(blockLocation)) event.setCancelled(true);
             else block_cooldowns.add(blockLocation);
         }

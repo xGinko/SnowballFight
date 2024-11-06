@@ -6,6 +6,7 @@ import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Color;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -29,11 +30,17 @@ public final class Util {
         SNOWY_DARK_BLUE = TextColor.fromHexString("#407794");
         SNOWY_RED = TextColor.fromHexString("#ff9ba6");
         SNOWY_WHITE_BOLD = Style.style().color(SNOWY_WHITE).decorate(TextDecoration.BOLD).build();
+
     }
 
     private static final Map<EntityType, Boolean> IS_LIVING_CACHE = new EnumMap<>(EntityType.class);
     public static boolean isLivingEntity(Entity entity) {
         return entity != null && IS_LIVING_CACHE.computeIfAbsent(entity.getType(), entityType -> entity instanceof LivingEntity);
+    }
+
+    private static final boolean GET_MIN_WORLD_HEIGHT_AVAILABLE = hasMethod(World.class, "getMinHeight");
+    public static int getMinWorldHeight(World world) {
+        return GET_MIN_WORLD_HEIGHT_AVAILABLE ? world.getMinHeight() : 0;
     }
 
     public static void sendMessage(CommandSender sender, Component message) {
@@ -49,6 +56,15 @@ public final class Util {
             Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    public static boolean hasMethod(Class<?> holderClass, String methodName, Class<?>... parameterClasses) {
+        try {
+            holderClass.getMethod(methodName, parameterClasses);
+            return true;
+        } catch (NoSuchMethodException e) {
             return false;
         }
     }

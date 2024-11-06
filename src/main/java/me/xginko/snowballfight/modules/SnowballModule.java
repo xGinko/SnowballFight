@@ -80,8 +80,10 @@ public abstract class SnowballModule implements Enableable, Disableable {
                 if (module.shouldEnable()) {
                     ENABLED_MODULES.add(module);
                 }
-            } catch (Throwable t) { // This is not laziness. We want to catch everything here if it fails to init
-                SnowballFight.logger().warn("Failed initialising module class '{}'.", moduleClass.getSimpleName(), t);
+            } catch (Throwable throwable) {
+                if (!(throwable instanceof ClassNotFoundException)) { // Ignore modules that have unsupported imports on older versions
+                    SnowballFight.logger().warn("Failed initialising module class '{}'.", moduleClass.getSimpleName(), throwable);
+                }
             }
         }
 

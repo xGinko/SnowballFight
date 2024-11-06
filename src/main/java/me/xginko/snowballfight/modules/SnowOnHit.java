@@ -3,12 +3,13 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.XMaterial;
 import me.xginko.snowballfight.SnowballFight;
+import me.xginko.snowballfight.utils.Util;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.type.Snow;
+import org.bukkit.block.data.type.Snow; // Doesn't exist in 1.12
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -118,7 +119,7 @@ public class SnowOnHit extends SnowballModule implements Listener {
 
             for (int x = centerX - snowPatchRadius; x <= centerX + snowPatchRadius; x++) {
                 for (int z = centerZ - snowPatchRadius; z <= centerZ + snowPatchRadius; z++) {
-                    for (int y = Math.max(world.getMinHeight(), centerY - snowPatchRadius); y <= centerY + snowPatchRadius; y++) {
+                    for (int y = Math.max(Util.getMinWorldHeight(world), centerY - snowPatchRadius); y <= centerY + snowPatchRadius; y++) {
                         if (y > world.getMaxHeight()) break;
 
                         Block iterativeBlock = world.getBlockAt(x, y, z);
