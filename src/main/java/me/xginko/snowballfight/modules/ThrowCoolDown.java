@@ -24,6 +24,8 @@ public class ThrowCoolDown extends SnowballModule implements Listener {
     private final Set<Location> block_cooldowns;
     private final boolean blockCooldownEnabled, entityCooldownEnabled;
 
+    private PlayerLaunchProjectileListener playerLaunchProjectileListener;
+
     protected ThrowCoolDown() {
         super("settings.cooldown", false,
                 "\nConfigure a cooldown delay between throwing snowballs for players.");
@@ -43,11 +45,19 @@ public class ThrowCoolDown extends SnowballModule implements Listener {
     @Override
     public void enable() {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        if (PlayerLaunchProjectileListener.CAN_REGISTER) {
+            playerLaunchProjectileListener = new PlayerLaunchProjectileListener(player_cooldowns);
+            plugin.getServer().getPluginManager().registerEvents(playerLaunchProjectileListener, plugin);
+        }
     }
 
     @Override
     public void disable() {
         HandlerList.unregisterAll(this);
+        if (playerLaunchProjectileListener != null) {
+            HandlerList.unregisterAll(playerLaunchProjectileListener);
+            playerLaunchProjectileListener = null;
+        }
     }
 
     private static class PlayerLaunchProjectileListener implements Listener {
