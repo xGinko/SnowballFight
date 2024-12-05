@@ -7,13 +7,10 @@ import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
 import me.xginko.snowballfight.utils.Util;
 import org.bukkit.FireworkEffect;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -138,47 +135,30 @@ public class FireworkOnHit extends SnowballModule implements Listener {
     private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
-        final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {
-            if (hitEntity == null) return;
-            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
+            if (event.getHitEntity() == null) return;
+            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(event.getHitEntity().getType()))) return;
         }
 
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
-        if (hitEntity != null) {
-            if (SnowballFight.isServerFolia()) SnowballFight.scheduling().entitySpecificScheduler(hitEntity)
-                    .run(() -> detonateFirework(hitEntity.getLocation(), (Snowball) event.getEntity()), null);
-            else detonateFirework(hitEntity.getLocation(), (Snowball) event.getEntity());
-            return;
-        }
-
-        final Block hitBlock = event.getHitBlock();
-
-        if (hitBlock != null) {
-            final BlockFace hitFace = event.getHitBlockFace();
-            final Location fireworkLoc;
-
-            if (hitFace != null) fireworkLoc = hitBlock.getRelative(hitFace).getLocation().toCenterLocation();
-            else fireworkLoc = hitBlock.getLocation().toCenterLocation();
-
-            if (SnowballFight.isServerFolia()) {
-                SnowballFight.scheduling().regionSpecificScheduler(fireworkLoc)
-                        .run(() -> detonateFirework(fireworkLoc, (Snowball) event.getEntity()));
-            } else {
-                detonateFirework(hitBlock.getLocation(), (Snowball) event.getEntity());
-            }
+        if (SnowballFight.isServerFolia()) {
+            SnowballFight.scheduling()
+                    .entitySpecificScheduler(event.getHitEntity() == null ? event.getEntity() : event.getHitEntity())
+                    .run(() -> detonateFirework(event.getEntity()), null);
+        } else {
+            detonateFirework(event.getEntity());
         }
     }
 
-    private void detonateFirework(final Location explosionLoc, final Snowball snowball) {
-        Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
+    private void detonateFirework(final Projectile snowball) {
+        Firework firework = snowball.getWorld().spawn(snowball.getLocation(), Firework.class);
         if (effectFireworks != null) {
             effectFireworks.add(firework.getUniqueId()); // Cache uuid to cancel damage/knockback by fireworks
         }
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();
-        WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get(snowball);
+        WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get((Snowball) snowball);
         meta.addEffect(FireworkEffect.builder()
                 .withColor(wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor())
                 .with(effectTypes.get(Util.RANDOM.nextInt(effectTypes.size())))
