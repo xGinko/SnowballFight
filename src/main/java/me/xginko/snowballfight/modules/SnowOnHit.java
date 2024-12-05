@@ -9,7 +9,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.type.Snow;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SnowOnHit extends SnowballModule implements Listener {
+    private static final boolean HAS_SNOW_DATA = Util.hasClass("org.bukkit.block.data.type.Snow");
 
     private final Set<EntityType> configuredTypes;
     private final double snowPatchRadiusSquared;
@@ -136,34 +136,34 @@ public class SnowOnHit extends SnowballModule implements Listener {
 
                         Material iterativeType = iterativeBlock.getType();
 
-                        if (iterativeType.isAir()) {
+                        if (iterativeType == XMaterial.AIR.parseMaterial() || iterativeType == XMaterial.CAVE_AIR.parseMaterial()) {
                             if (iterativeBlock.getRelative(BlockFace.DOWN).getType().isSolid()) {
                                 iterativeBlock.setType(XMaterial.SNOW.parseMaterial(), true);
                             }
                             continue;
                         }
 
-                        if (addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
-                            Snow snow = (Snow) iterativeBlock.getBlockData();
-                            final int layers = snow.getLayers();
+                        if (addSnowLayer && HAS_SNOW_DATA && iterativeType == XMaterial.SNOW.parseMaterial()) {
+                            org.bukkit.block.data.type.Snow snowData = (org.bukkit.block.data.type.Snow) iterativeBlock.getBlockData();
+                            final int layers = snowData.getLayers();
                             if (replaceFullLayer) {
-                                if (layers < snow.getMaximumLayers() - 1) {
-                                    snow.setLayers(layers + 1);
-                                    iterativeBlock.setBlockData(snow);
+                                if (layers < snowData.getMaximumLayers() - 1) {
+                                    snowData.setLayers(layers + 1);
+                                    iterativeBlock.setBlockData(snowData);
                                 } else {
                                     // If only one or no more layers left to add, turn into snow block.
                                     iterativeBlock.setType(powderSnowEnabled ? XMaterial.POWDER_SNOW.parseMaterial() : XMaterial.SNOW_BLOCK.parseMaterial(), true);
                                 }
                             } else {
-                                if (layers < snow.getMaximumLayers()) {
-                                    snow.setLayers(layers + 1);
-                                    iterativeBlock.setBlockData(snow);
+                                if (layers < snowData.getMaximumLayers()) {
+                                    snowData.setLayers(layers + 1);
+                                    iterativeBlock.setBlockData(snowData);
                                 }
                             }
                             continue;
                         }
 
-                        if (formIce && iterativeType.equals(XMaterial.WATER.parseMaterial())) {
+                        if (formIce && iterativeType == XMaterial.WATER.parseMaterial()) {
                             iterativeBlock.setType(XMaterial.ICE.parseMaterial(), true);
                         }
                     }

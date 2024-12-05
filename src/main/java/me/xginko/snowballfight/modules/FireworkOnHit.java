@@ -17,6 +17,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.projectiles.ProjectileSource;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -29,6 +30,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FireworkOnHit extends SnowballModule implements Listener {
+
+    private final static boolean CAN_SET_SHOOTER = Util.hasMethod(Firework.class, "setShooter", ProjectileSource.class);
 
     private final List<FireworkEffect.Type> effectTypes;
     private final Set<EntityType> configuredTypes;
@@ -165,7 +168,7 @@ public class FireworkOnHit extends SnowballModule implements Listener {
                 .trail(trail)
                 .build());
         firework.setFireworkMeta(meta);
-        firework.setShooter(snowball.getShooter()); // Copy over shooter for damage tracking
+        if (CAN_SET_SHOOTER) firework.setShooter(snowball.getShooter()); // Copy over shooter for damage tracking
         firework.detonate();
     }
 
