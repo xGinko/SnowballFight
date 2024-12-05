@@ -10,7 +10,6 @@ import org.bukkit.FireworkEffect;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -142,23 +141,23 @@ public class FireworkOnHit extends SnowballModule implements Listener {
 
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
+        final Snowball snowball = (Snowball) event.getEntity();
+
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.scheduling()
-                    .entitySpecificScheduler(event.getHitEntity() == null ? event.getEntity() : event.getHitEntity())
-                    .run(() -> detonateFirework(event.getEntity()), null);
+            SnowballFight.scheduling().entitySpecificScheduler(snowball).run(() -> detonateFirework(snowball), null);
         } else {
-            detonateFirework(event.getEntity());
+            detonateFirework(snowball);
         }
     }
 
-    private void detonateFirework(final Projectile snowball) {
+    private void detonateFirework(final Snowball snowball) {
         Firework firework = snowball.getWorld().spawn(snowball.getLocation(), Firework.class);
         if (effectFireworks != null) {
             effectFireworks.add(firework.getUniqueId()); // Cache uuid to cancel damage/knockback by fireworks
         }
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();
-        WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get((Snowball) snowball);
+        WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get(snowball);
         meta.addEffect(FireworkEffect.builder()
                 .withColor(wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor())
                 .with(effectTypes.get(Util.RANDOM.nextInt(effectTypes.size())))
