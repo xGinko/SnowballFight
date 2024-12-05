@@ -3,7 +3,7 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.XMaterial;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.utils.SnowHelper;
+import me.xginko.snowballfight.utils.SnowTool;
 import me.xginko.snowballfight.utils.Util;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SnowOnHit extends SnowballModule implements Listener {
-    private static final boolean HAS_SNOW_DATA = Util.hasClass("org.bukkit.block.data.type.Snow");
 
     private final Set<EntityType> configuredTypes;
     private final int snowPatchRadius;
@@ -142,8 +141,8 @@ public class SnowOnHit extends SnowballModule implements Listener {
                             continue;
                         }
 
-                        if (HAS_SNOW_DATA && addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
-                            SnowHelper.increaseSnowLayer(iterativeBlock, replaceFullLayer, powderSnowEnabled);
+                        if (SnowTool.CAN_MODIFY_SNOW && addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
+                            SnowTool.increaseSnowLayer(iterativeBlock, replaceFullLayer, powderSnowEnabled);
                             continue;
                         }
 

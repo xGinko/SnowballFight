@@ -4,7 +4,9 @@ import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Snow;
 
-public class SnowHelper {
+public class SnowTool {
+
+    public static final boolean CAN_MODIFY_SNOW = Util.hasClass("org.bukkit.block.data.type.Snow");
 
     public static void increaseSnowLayer(Block block, boolean replaceFullLayer, boolean powderSnowEnabled) {
         Snow snowData = (Snow) block.getBlockData();

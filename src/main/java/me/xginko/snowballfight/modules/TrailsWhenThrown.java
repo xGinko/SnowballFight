@@ -1,12 +1,9 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import com.cryptomorin.xseries.particles.XParticle;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
-import me.xginko.snowballfight.utils.Util;
-import org.bukkit.Color;
-import org.bukkit.Location;
+import me.xginko.snowballfight.utils.ParticleTool;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -24,10 +21,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class TrailsWhenThrown extends SnowballModule implements Listener {
-    private static final boolean HAS_DUST_OPTIONS = Util.hasClass("org.bukkit.Particle.DustOptions");
-    private static final boolean HAS_PARTICLE_BUILDER = Util.hasClass("com.destroystokyo.paper.ParticleBuilder");
 
     private final long trailDurationMillis, initialDelayTicks, periodTicks;
+    private final float particleSize;
     private final int particlesPerTick;
     private final boolean onlyPlayers;
 
@@ -42,6 +38,7 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
                 Math.max(1, config.getInt(configPath + ".trail-duration-seconds", 20)));
         this.particlesPerTick = Math.max(1, config.getInt(configPath + ".particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low."));
+        this.particleSize = config.getFloat(configPath + ".particle-size", 1.0F);
         this.initialDelayTicks = Math.max(1, config.getInt(configPath + ".initial-delay-ticks", 3,
                 "Time in ticks after throwing snowball until trails should begin to generate." +
                 "Recommended: At least 2 ticks delay so the particles don't obstruct the players view."));
@@ -74,7 +71,7 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
 
         @Nullable ScheduledTask particleTask = SnowballFight.scheduling().entitySpecificScheduler(event.getEntity())
                 .runAtFixedRate(
-                        new SnowballTrailTask(event.getEntity(), trailDurationMillis, particlesPerTick),
+                        new SnowballTrailTask(event.getEntity(), trailDurationMillis, particlesPerTick, particleSize),
                         null,
                         initialDelayTicks,
                         periodTicks
@@ -89,11 +86,13 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
 
         private final WrappedSnowball wrappedSnowball;
         private final long expireMillis;
+        private final float size;
         private final int amount;
 
-        private SnowballTrailTask(Projectile snowball, long durationMillis, int amount) {
+        private SnowballTrailTask(Projectile snowball, long durationMillis, int amount, float size) {
             this.wrappedSnowball = SnowballFight.snowballTracker().get((Snowball) snowball);
             this.amount = amount;
+            this.size = size;
             this.expireMillis = System.currentTimeMillis() + durationMillis;
         }
 
@@ -105,53 +104,12 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
             }
 
             try {
-                spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getPrimaryColor(), amount);
-                spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getSecondaryColor(), amount);
+                ParticleTool.spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getPrimaryColor(), amount, size);
+                ParticleTool.spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getSecondaryColor(), amount, size);
             } catch (Throwable t) {
                 particleTasks.remove(wrappedSnowball.snowball.getUniqueId()).cancel();
                 SnowballFight.logger().warn("Trail task ended with an exception - {}", t.getLocalizedMessage());
             }
         }
-    }
-
-    private static void spawnTrailParticle(Location location, Color color, int amount) {
-        if (HAS_PARTICLE_BUILDER) {
-            new com.destroystokyo.paper.ParticleBuilder(XParticle.DUST.get())
-                    .location(location)
-                    .count(amount)
-                    .color(color)
-                    .spawn();
-            return;
-        }
-
-        // spigot 1.13+
-        if (HAS_DUST_OPTIONS) {
-            location.getWorld().spawnParticle(
-                    XParticle.DUST.get(),
-                    location,
-                    amount,
-                    0, 0, 0,
-                    1,
-                    color
-            );
-            return;
-        }
-
-        // spigot 1.12
-        location.getWorld().spawnParticle(
-                XParticle.DUST.get(),
-                location,
-                amount,
-                convertColorValue(color.getRed()), convertColorValue(color.getGreen()), convertColorValue(color.getBlue()),
-                1,
-                null
-        );
-    }
-
-    private static double convertColorValue(double value) {
-        if (value <= 0.0D) {
-            value = -1.0D;
-        }
-        return value / 255.0D;
     }
 }
