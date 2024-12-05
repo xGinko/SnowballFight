@@ -4,7 +4,6 @@ import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.particles.XParticle;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
-import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -73,7 +72,7 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
 
         @Nullable ScheduledTask particleTask = SnowballFight.scheduling().entitySpecificScheduler(event.getEntity())
                 .runAtFixedRate(
-                        new TrailTask(event.getEntity(), trailDurationMillis, particleSize, particlesPerTick),
+                        new SnowballTrailTask(event.getEntity(), trailDurationMillis, particlesPerTick, particleSize),
                         null,
                         initialDelayTicks,
                         periodTicks
@@ -84,21 +83,22 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
         }
     }
 
-    private static class TrailTask implements Runnable {
+    private static class SnowballTrailTask implements Runnable {
 
         private final Projectile snowball;
-        private final Color[] colors;
+        private final Particle.DustOptions[] dustOptions;
         private final long expireMillis;
-        private final float size;
         private final int amount;
 
-        private TrailTask(Projectile snowball, long durationMillis, float size, int amount) {
+        private SnowballTrailTask(Projectile snowball, long durationMillis, int amount, float size) {
             this.snowball = snowball;
-            final WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get((Snowball) snowball);
-            this.colors = new Color[] { wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor() };
-            this.expireMillis = System.currentTimeMillis() + durationMillis;
-            this.size = size;
             this.amount = amount;
+            final WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get((Snowball) snowball);
+            this.dustOptions = new Particle.DustOptions[] {
+                    new Particle.DustOptions(wrappedSnowball.getPrimaryColor(), size),
+                    new Particle.DustOptions(wrappedSnowball.getSecondaryColor(), size)
+            };
+            this.expireMillis = System.currentTimeMillis() + durationMillis;
         }
 
         @Override
@@ -108,14 +108,9 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
                 return;
             }
 
-            for (Color color : colors) {
+            for (Particle.DustOptions dustOption : dustOptions) {
                 try {
-                    snowball.getWorld().spawnParticle(
-                            XParticle.DUST.get(), // Redstone Dust is one of the few that can be colored
-                            snowball.getLocation(),
-                            amount,
-                            new Particle.DustOptions(color, size)
-                    );
+                    snowball.getWorld().spawnParticle(XParticle.DUST.get(), snowball.getLocation(), amount, dustOption);
                 } catch (Throwable t) {
                     particleTasks.remove(snowball.getUniqueId()).cancel();
                     SnowballFight.logger().warn("Trail task ended with an exception - {}", t.getLocalizedMessage());
