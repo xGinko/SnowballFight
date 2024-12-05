@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
 import me.xginko.snowballfight.events.PreSnowballExplodeEvent;
 import org.bukkit.Location;
@@ -120,10 +119,6 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
                 event.isAsynchronous()
         );
 
-        if (SnowballFight.isServerFolia()) {
-            SnowballFight.scheduling().regionSpecificScheduler(explodeLoc).run(postSnowballExplodeEvent::callEvent);
-        } else {
-            postSnowballExplodeEvent.callEvent();
-        }
+        postSnowballExplodeEvent.callEvent();
     }
 }
