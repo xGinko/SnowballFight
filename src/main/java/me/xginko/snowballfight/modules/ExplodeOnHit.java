@@ -3,8 +3,6 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
 import me.xginko.snowballfight.events.PreSnowballExplodeEvent;
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -77,18 +75,16 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
     private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
-        final Entity hitEntity = event.getHitEntity();
-
         if (onlyForEntities) {
-            if (hitEntity == null) return;
-            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
+            if (event.getHitEntity() == null) return;
+            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(event.getHitEntity().getType()))) return;
         }
 
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         PreSnowballExplodeEvent preSnowballExplodeEvent = new PreSnowballExplodeEvent(
                 (Snowball) event.getEntity(),
-                hitEntity,
+                event.getHitEntity(),
                 event.getHitBlock() != null ? event.getHitBlock().getLocation().toCenterLocation() : event.getEntity().getLocation(),
                 explosionPower,
                 explosionSetFire,
@@ -98,20 +94,18 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
 
         if (!preSnowballExplodeEvent.callEvent()) return;
 
-        final Snowball snowball = preSnowballExplodeEvent.getSnowball();
-        final Location explodeLoc = preSnowballExplodeEvent.getExplodeLocation();
-
         PostSnowballExplodeEvent postSnowballExplodeEvent = new PostSnowballExplodeEvent(
                 preSnowballExplodeEvent.getSnowball(),
                 preSnowballExplodeEvent.getHitEntity(),
-                explodeLoc,
+                preSnowballExplodeEvent.getExplodeLocation(),
                 preSnowballExplodeEvent.getExplosionPower(),
                 preSnowballExplodeEvent.willSetFire(),
                 preSnowballExplodeEvent.willBreakBlocks(),
-                explodeLoc.getWorld().createExplosion(
+                preSnowballExplodeEvent.getExplodeLocation().getWorld().createExplosion(
                         // Set explode source for damage tracking
-                        snowball.getShooter() instanceof LivingEntity ? (LivingEntity) snowball.getShooter() : snowball,
-                        explodeLoc,
+                        preSnowballExplodeEvent.getSnowball().getShooter() instanceof LivingEntity ?
+                                (LivingEntity) preSnowballExplodeEvent.getSnowball().getShooter() : preSnowballExplodeEvent.getSnowball(),
+                        preSnowballExplodeEvent.getExplodeLocation(),
                         preSnowballExplodeEvent.getExplosionPower(),
                         preSnowballExplodeEvent.willSetFire(),
                         preSnowballExplodeEvent.willBreakBlocks()
