@@ -22,7 +22,7 @@ public final class SnowballFight extends JavaPlugin {
     private static GracefulScheduling scheduling;
     private static ComponentLogger logger;
     private static Metrics metrics;
-    private static boolean isServerFolia;
+    private static boolean isServerPaper, isServerFolia;
 
     @Override
     public void onEnable() {
@@ -31,6 +31,8 @@ public final class SnowballFight extends JavaPlugin {
         scheduling = new MorePaperLib(instance).scheduling();
         logger = ComponentLogger.logger(getLogger().getName());
         metrics = new Metrics(instance, 21271);
+        isServerPaper = Util.hasClass("com.destroystokyo.paper.PaperConfig")
+                || Util.hasClass("io.papermc.paper.configuration.Configuration");
         isServerFolia = Util.hasClass("io.papermc.paper.threadedregions.RegionizedServer");
 
         logger.info(Component.text("                            ").style(Util.SNOWY_WHITE_BOLD));
@@ -90,7 +92,7 @@ public final class SnowballFight extends JavaPlugin {
         return instance;
     }
 
-    public static SnowballTracker snowballs() {
+    public static SnowballTracker snowballTracker() {
         return snowballs;
     }
 
@@ -112,5 +114,9 @@ public final class SnowballFight extends JavaPlugin {
 
     public static boolean isServerFolia() {
         return isServerFolia;
+    }
+
+    public static boolean isServerPaper() {
+        return isServerPaper;
     }
 }

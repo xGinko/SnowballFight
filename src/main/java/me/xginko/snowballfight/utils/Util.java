@@ -30,7 +30,6 @@ public final class Util {
         SNOWY_DARK_BLUE = TextColor.fromHexString("#407794");
         SNOWY_RED = TextColor.fromHexString("#ff9ba6");
         SNOWY_WHITE_BOLD = Style.style().color(SNOWY_WHITE).decorate(TextDecoration.BOLD).build();
-
     }
 
     private static final Map<EntityType, Boolean> IS_LIVING_CACHE = new EnumMap<>(EntityType.class);

@@ -1,7 +1,6 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
-import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableList;
 import me.xginko.snowballfight.SnowballFight;
@@ -20,7 +19,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 
@@ -42,6 +40,7 @@ public class FireworkOnHit extends SnowballModule implements Listener {
             asBlacklist, onlyPlayers;
 
     private Set<UUID> effectFireworks;
+    private Listener damageListener, knockBackListener;
 
     protected FireworkOnHit() {
         super("settings.fireworks", true,
@@ -50,8 +49,9 @@ public class FireworkOnHit extends SnowballModule implements Listener {
                 "If enabled will only work if the snowball was thrown by a player.");
         this.dealDamage = config.getBoolean(configPath + ".deal-damage", false,
                 "Should firework effects deal damage like regular fireworks?");
-        this.dealKnockback = config.getBoolean(configPath + ".deal-knockback", false,
-                "Should firework effects deal knockback like regular fireworks?");
+        this.dealKnockback = config.getBoolean(configPath + ".deal-knockback", !SnowballFight.isServerPaper(),
+                "Should firework effects deal knockback like regular fireworks?\n" +
+                        "Note: This setting has no effect on non-paper servers.");
         this.trail = config.getBoolean(configPath + ".trail", true,
                 "Whether the firework particles should leave trails.");
         this.flicker = config.getBoolean(configPath + ".flicker", false,
@@ -71,8 +71,9 @@ public class FireworkOnHit extends SnowballModule implements Listener {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
-                    if (list.isEmpty())
+                    if (list.isEmpty()) {
                         list.add(FireworkEffect.Type.BURST);
+                    }
                     return ImmutableList.copyOf(list);
                 }));
         this.onlyForEntities = config.getBoolean(configPath + ".only-for-entities", false,
@@ -101,14 +102,32 @@ public class FireworkOnHit extends SnowballModule implements Listener {
 
     @Override
     public void enable() {
-        effectFireworks = Collections.newSetFromMap(Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofSeconds(2)).<UUID, Boolean>build().asMap());
+        if (!dealDamage || !dealKnockback) {
+            effectFireworks = Collections.newSetFromMap(Caffeine.newBuilder()
+                    .expireAfterWrite(Duration.ofSeconds(2)).<UUID, Boolean>build().asMap());
+            if (!dealDamage) {
+                damageListener = new DamageListener(effectFireworks);
+                plugin.getServer().getPluginManager().registerEvents(damageListener, plugin);
+            }
+            if (!dealKnockback && SnowballFight.isServerPaper()) {
+                knockBackListener = new KnockBackListener(effectFireworks);
+                plugin.getServer().getPluginManager().registerEvents(knockBackListener, plugin);
+            }
+        }
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public void disable() {
         HandlerList.unregisterAll(this);
+        if (damageListener != null) {
+            HandlerList.unregisterAll(damageListener);
+            damageListener = null;
+        }
+        if (knockBackListener != null) {
+            HandlerList.unregisterAll(knockBackListener);
+            knockBackListener = null;
+        }
         if (effectFireworks != null) {
             effectFireworks.clear();
             effectFireworks = null;
@@ -154,11 +173,12 @@ public class FireworkOnHit extends SnowballModule implements Listener {
 
     private void detonateFirework(final Location explosionLoc, final Snowball snowball) {
         Firework firework = explosionLoc.getWorld().spawn(explosionLoc, Firework.class);
-        if (!dealDamage || !dealKnockback)
+        if (effectFireworks != null) {
             effectFireworks.add(firework.getUniqueId()); // Cache uuid to cancel damage/knockback by fireworks
+        }
         FireworkMeta meta = firework.getFireworkMeta();
         meta.clearEffects();
-        WrappedSnowball wrappedSnowball = SnowballFight.snowballs().get(snowball);
+        WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get(snowball);
         meta.addEffect(FireworkEffect.builder()
                 .withColor(wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor())
                 .with(effectTypes.get(Util.RANDOM.nextInt(effectTypes.size())))
@@ -170,17 +190,35 @@ public class FireworkOnHit extends SnowballModule implements Listener {
         firework.detonate();
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!dealDamage && effectFireworks.contains(event.getDamager().getUniqueId())) {
-            event.setCancelled(true);
+    private static class DamageListener implements Listener {
+
+        private final Set<UUID> effectFireworks;
+
+        private DamageListener(Set<UUID> effectFireworks) {
+            this.effectFireworks = effectFireworks;
+        }
+
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        private void onEntityDamageByEntity(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
+            if (effectFireworks.contains(event.getDamager().getUniqueId())) {
+                event.setCancelled(true);
+            }
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void onEntityKnockbackByEntity(EntityKnockbackByEntityEvent event) {
-        if (!dealKnockback && effectFireworks.contains(event.getHitBy().getUniqueId())) {
-            event.setCancelled(true);
+    private static class KnockBackListener implements Listener {
+
+        private final Set<UUID> effectFireworks;
+
+        private KnockBackListener(Set<UUID> effectFireworks) {
+            this.effectFireworks = effectFireworks;
+        }
+
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        private void onEntityKnockbackByEntity(com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent event) {
+            if (effectFireworks.contains(event.getHitBy().getUniqueId())) {
+                event.setCancelled(true);
+            }
         }
     }
 }

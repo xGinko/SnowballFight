@@ -2,9 +2,10 @@ package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.particles.XParticle;
-import com.destroystokyo.paper.ParticleBuilder;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
+import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
@@ -26,7 +27,7 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
     private final int particlesPerTick;
     private final boolean onlyPlayers;
 
-    private Map<UUID, ScheduledTask> particleTracker;
+    private Map<UUID, ScheduledTask> particleTasks;
 
     protected TrailsWhenThrown() {
         super("settings.trails", true,
@@ -47,17 +48,17 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
 
     @Override
     public void enable() {
-        particleTracker = new ConcurrentHashMap<>();
+        particleTasks = new ConcurrentHashMap<>();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public void disable() {
         HandlerList.unregisterAll(this);
-        if (particleTracker != null) {
-            particleTracker.forEach(((uuid, scheduledTask) -> scheduledTask.cancel()));
-            particleTracker.clear();
-            particleTracker = null;
+        if (particleTasks != null) {
+            particleTasks.forEach(((uuid, scheduledTask) -> scheduledTask.cancel()));
+            particleTasks.clear();
+            particleTasks = null;
         }
     }
 
@@ -67,30 +68,36 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         final Snowball snowball = (Snowball) event.getEntity();
-        if (particleTracker.containsKey(snowball.getUniqueId())) return;
+        if (particleTasks.containsKey(snowball.getUniqueId())) return;
 
-        final WrappedSnowball wrappedSnowball = SnowballFight.snowballs().get(snowball);
-
-        ParticleBuilder primary = new ParticleBuilder(XParticle.DUST.get()) // Only redstone particles can be colored
-                .color(wrappedSnowball.getPrimaryColor())
-                .count(particlesPerTick);
-        ParticleBuilder secondary = new ParticleBuilder(XParticle.DUST.get())
-                .color(wrappedSnowball.getSecondaryColor())
-                .count(particlesPerTick);
-
+        final WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get(snowball);
         final long expireTimeMillis = System.currentTimeMillis() + trailDurationMillis;
 
         @Nullable ScheduledTask particleTask = SnowballFight.scheduling().entitySpecificScheduler(snowball).runAtFixedRate(() -> {
             if (snowball.isDead() || System.currentTimeMillis() >= expireTimeMillis) {
-                particleTracker.remove(snowball.getUniqueId()).cancel();
+                particleTasks.remove(snowball.getUniqueId()).cancel();
             } else {
-                primary.location(snowball.getLocation()).spawn();
-                secondary.location(snowball.getLocation()).spawn();
+                spawnTrailParticle(snowball.getLocation(), wrappedSnowball.getPrimaryColor());
+                spawnTrailParticle(snowball.getLocation(), wrappedSnowball.getSecondaryColor());
             }
         }, null, initialDelayTicks, periodTicks);
 
-        if (particleTask != null) {
-            this.particleTracker.put(snowball.getUniqueId(), particleTask);
+        if (particleTask != null) { // Task is null if the entity was removed by the time particles were scheduled
+            particleTasks.put(snowball.getUniqueId(), particleTask);
         }
+    }
+
+    private void spawnTrailParticle(Location location, Color color) {
+        location.getWorld().spawnParticle( // Use spigot available method for compatibility
+                XParticle.DUST.get(), // Only redstone dust can be colored (XParticle for compatibility across versions)
+                null, // receivers = null means it will be visible for everyone
+                null, // source = null because the source is not a player
+                location.getX(), location.getY(), location.getZ(),
+                particlesPerTick,
+                0, 0, 0, // No location offset needed, we want the exact location of the snowball
+                1, // No extras needed so we set it to default (1)
+                color, // data = color only works on redstone dust
+                true // Always force
+        );
     }
 }
