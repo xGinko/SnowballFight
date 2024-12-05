@@ -109,7 +109,7 @@ public class SnowOnHit extends SnowballModule implements Listener {
     }
 
     private void coverWithSnowAt(Block startBlock) {
-        final Location hitLoc = startBlock.getLocation().toCenterLocation();
+        final Location hitLoc = Util.toCenterLocation(startBlock.getLocation());
 
         final int chunkX = hitLoc.getBlockX() >> 4;
         final int chunkZ = hitLoc.getBlockZ() >> 4;
@@ -137,7 +137,7 @@ public class SnowOnHit extends SnowballModule implements Listener {
                         Material iterativeType = iterativeBlock.getType();
 
                         if (iterativeType.isAir()) {
-                            if (iterativeBlock.getRelative(BlockFace.DOWN).isSolid()) {
+                            if (iterativeBlock.getRelative(BlockFace.DOWN).getType().isSolid()) {
                                 iterativeBlock.setType(XMaterial.SNOW.parseMaterial(), true);
                             }
                             continue;

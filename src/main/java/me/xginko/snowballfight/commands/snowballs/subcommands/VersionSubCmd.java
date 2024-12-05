@@ -1,6 +1,5 @@
 package me.xginko.snowballfight.commands.snowballs.subcommands;
 
-import io.papermc.paper.plugin.configuration.PluginMeta;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.commands.SubCommand;
 import me.xginko.snowballfight.utils.Util;
@@ -35,7 +34,7 @@ public class VersionSubCmd extends SubCommand {
         String name, version, website, author;
 
         try {
-            final PluginMeta pluginMeta = SnowballFight.getInstance().getPluginMeta();
+            final io.papermc.paper.plugin.configuration.PluginMeta pluginMeta = SnowballFight.getInstance().getPluginMeta();
             name = pluginMeta.getName();
             version = pluginMeta.getVersion();
             website = pluginMeta.getWebsite();

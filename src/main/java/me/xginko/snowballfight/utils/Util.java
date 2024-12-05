@@ -6,6 +6,7 @@ import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -30,6 +31,14 @@ public final class Util {
         SNOWY_DARK_BLUE = TextColor.fromHexString("#407794");
         SNOWY_RED = TextColor.fromHexString("#ff9ba6");
         SNOWY_WHITE_BOLD = Style.style().color(SNOWY_WHITE).decorate(TextDecoration.BOLD).build();
+    }
+
+    public static @NotNull Location toCenterLocation(@NotNull Location location) {
+        Location centered = location.clone();
+        centered.setX(centered.getBlockX() + 0.5);
+        centered.setY(centered.getBlockY() + 0.5);
+        centered.setZ(centered.getBlockZ() + 0.5);
+        return location;
     }
 
     private static final Map<EntityType, Boolean> IS_LIVING_CACHE = new EnumMap<>(EntityType.class);

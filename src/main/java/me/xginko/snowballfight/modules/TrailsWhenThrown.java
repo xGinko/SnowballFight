@@ -5,8 +5,9 @@ import com.cryptomorin.xseries.particles.XParticle;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
 import org.bukkit.Color;
-import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -24,10 +25,11 @@ import java.util.concurrent.TimeUnit;
 public class TrailsWhenThrown extends SnowballModule implements Listener {
 
     private final long trailDurationMillis, initialDelayTicks, periodTicks;
+    private final float particleSize;
     private final int particlesPerTick;
     private final boolean onlyPlayers;
 
-    private Map<UUID, ScheduledTask> particleTasks;
+    private static Map<UUID, ScheduledTask> particleTasks;
 
     protected TrailsWhenThrown() {
         super("settings.trails", true,
@@ -38,6 +40,7 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
                 Math.max(1, config.getInt(configPath + ".trail-duration-seconds", 20)));
         this.particlesPerTick = Math.max(1, config.getInt(configPath + ".particles-per-tick", 10,
                 "How many particles to spawn per tick. Recommended to leave low."));
+        this.particleSize = config.getFloat(configPath + ".particle-size", 1.0F);
         this.initialDelayTicks = Math.max(1, config.getInt(configPath + ".initial-delay-ticks", 3,
                 "Time in ticks after throwing snowball until trails should begin to generate." +
                 "Recommended: At least 2 ticks delay so the particles don't obstruct the players view."));
@@ -66,38 +69,58 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
     private void onProjectileLaunch(ProjectileLaunchEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
+        if (particleTasks.containsKey(event.getEntity().getUniqueId())) return;
 
-        final Snowball snowball = (Snowball) event.getEntity();
-        if (particleTasks.containsKey(snowball.getUniqueId())) return;
-
-        final WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get(snowball);
-        final long expireTimeMillis = System.currentTimeMillis() + trailDurationMillis;
-
-        @Nullable ScheduledTask particleTask = SnowballFight.scheduling().entitySpecificScheduler(snowball).runAtFixedRate(() -> {
-            if (snowball.isDead() || System.currentTimeMillis() >= expireTimeMillis) {
-                particleTasks.remove(snowball.getUniqueId()).cancel();
-            } else {
-                spawnTrailParticle(snowball.getLocation(), wrappedSnowball.getPrimaryColor());
-                spawnTrailParticle(snowball.getLocation(), wrappedSnowball.getSecondaryColor());
-            }
-        }, null, initialDelayTicks, periodTicks);
+        @Nullable ScheduledTask particleTask = SnowballFight.scheduling().entitySpecificScheduler(event.getEntity())
+                .runAtFixedRate(
+                        new TrailTask(event.getEntity(), trailDurationMillis, particleSize, particlesPerTick),
+                        null,
+                        initialDelayTicks,
+                        periodTicks
+                );
 
         if (particleTask != null) { // Task is null if the entity was removed by the time particles were scheduled
-            particleTasks.put(snowball.getUniqueId(), particleTask);
+            particleTasks.put(event.getEntity().getUniqueId(), particleTask);
         }
     }
 
-    private void spawnTrailParticle(Location location, Color color) {
-        location.getWorld().spawnParticle( // Use spigot available method for compatibility
-                XParticle.DUST.get(), // Only redstone dust can be colored (XParticle for compatibility across versions)
-                null, // receivers = null means it will be visible for everyone
-                null, // source = null because the source is not a player
-                location.getX(), location.getY(), location.getZ(),
-                particlesPerTick,
-                0, 0, 0, // No location offset needed, we want the exact location of the snowball
-                1, // No extras needed so we set it to default (1)
-                color, // data = color only works on redstone dust
-                true // Always force
-        );
+    private static class TrailTask implements Runnable {
+
+        private final Projectile snowball;
+        private final Color[] colors;
+        private final long expireMillis;
+        private final float size;
+        private final int amount;
+
+        private TrailTask(Projectile snowball, long durationMillis, float size, int amount) {
+            this.snowball = snowball;
+            final WrappedSnowball wrappedSnowball = SnowballFight.snowballTracker().get((Snowball) snowball);
+            this.colors = new Color[] { wrappedSnowball.getPrimaryColor(), wrappedSnowball.getSecondaryColor() };
+            this.expireMillis = System.currentTimeMillis() + durationMillis;
+            this.size = size;
+            this.amount = amount;
+        }
+
+        @Override
+        public void run() {
+            if (snowball.isDead() || System.currentTimeMillis() >= expireMillis) {
+                particleTasks.remove(snowball.getUniqueId()).cancel();
+                return;
+            }
+
+            for (Color color : colors) {
+                try {
+                    snowball.getWorld().spawnParticle(
+                            XParticle.DUST.get(), // Redstone Dust is one of the few that can be colored
+                            snowball.getLocation(),
+                            amount,
+                            new Particle.DustOptions(color, size)
+                    );
+                } catch (Throwable t) {
+                    particleTasks.remove(snowball.getUniqueId()).cancel();
+                    SnowballFight.logger().warn("Trail task ended with an exception - {}", t.getLocalizedMessage());
+                }
+            }
+        }
     }
 }

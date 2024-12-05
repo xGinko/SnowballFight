@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -103,9 +104,24 @@ public class LightningOnHit extends SnowballModule implements Listener {
     }
 
     private void strikeLightning(final Location strikeLoc) {
-        for (int i = 0; i < strikeAmount; i++) {
-            (dealDamage ? strikeLoc.getWorld().strikeLightning(strikeLoc) : strikeLoc.getWorld().strikeLightningEffect(strikeLoc))
-                    .setFlashCount(flashCount);
+        try {
+            for (int i = 0; i < strikeAmount; i++) {
+                final LightningStrike lightningStrike;
+
+                if (dealDamage) {
+                    lightningStrike = Objects.requireNonNull(strikeLoc.getWorld(), "World is not set").strikeLightning(strikeLoc);
+                } else {
+                    lightningStrike = Objects.requireNonNull(strikeLoc.getWorld(), "World is not set").strikeLightningEffect(strikeLoc);
+                }
+
+                if (SnowballFight.isServerPaper()) {
+                    lightningStrike.setFlashCount(flashCount);
+                } else {
+                    lightningStrike.setFlashes(flashCount);
+                }
+            }
+        } catch (Throwable t) {
+            warn(t.getLocalizedMessage());
         }
     }
 }

@@ -1,6 +1,7 @@
 package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
+import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
 import me.xginko.snowballfight.events.PreSnowballExplodeEvent;
 import me.xginko.snowballfight.utils.Util;
@@ -86,7 +87,7 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
         PreSnowballExplodeEvent preSnowballExplodeEvent = new PreSnowballExplodeEvent(
                 (Snowball) event.getEntity(),
                 event.getHitEntity(),
-                event.getHitBlock() != null ? event.getHitBlock().getLocation().toCenterLocation() : event.getEntity().getLocation(),
+                event.getHitBlock() != null ? Util.toCenterLocation(event.getHitBlock().getLocation()) : event.getEntity().getLocation(),
                 explosionPower,
                 explosionSetFire,
                 explosionBreakBlocks,
@@ -112,18 +113,31 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
                 preSnowballExplodeEvent.getExplosionPower(),
                 preSnowballExplodeEvent.willSetFire(),
                 preSnowballExplodeEvent.willBreakBlocks(),
-                preSnowballExplodeEvent.getExplodeLocation().getWorld().createExplosion(
-                        // Set explode source for damage tracking
-                        preSnowballExplodeEvent.getSnowball().getShooter() instanceof LivingEntity ?
-                                (LivingEntity) preSnowballExplodeEvent.getSnowball().getShooter() : preSnowballExplodeEvent.getSnowball(),
-                        preSnowballExplodeEvent.getExplodeLocation(),
-                        preSnowballExplodeEvent.getExplosionPower(),
-                        preSnowballExplodeEvent.willSetFire(),
-                        preSnowballExplodeEvent.willBreakBlocks()
-                ),
+                createExplosion(preSnowballExplodeEvent),
                 event.isAsynchronous()
         );
 
-        postSnowballExplodeEvent.callEvent();
+        plugin.getServer().getPluginManager().callEvent(postSnowballExplodeEvent);
+    }
+
+    private boolean createExplosion(PreSnowballExplodeEvent preSnowballExplodeEvent) {
+        if (SnowballFight.isServerPaper()) {
+            return preSnowballExplodeEvent.getExplodeLocation().getWorld().createExplosion(
+                    // Set explode source for damage tracking without getting blocked by the MOB_GRIEFING gamerule
+                    preSnowballExplodeEvent.getSnowball().getShooter() instanceof LivingEntity ?
+                            (LivingEntity) preSnowballExplodeEvent.getSnowball().getShooter() : preSnowballExplodeEvent.getSnowball(),
+                    preSnowballExplodeEvent.getExplodeLocation(),
+                    preSnowballExplodeEvent.getExplosionPower(),
+                    preSnowballExplodeEvent.willSetFire(),
+                    preSnowballExplodeEvent.willBreakBlocks()
+            );
+        } else {
+            return preSnowballExplodeEvent.getExplodeLocation().getWorld().createExplosion(
+                    preSnowballExplodeEvent.getExplodeLocation(),
+                    preSnowballExplodeEvent.getExplosionPower(),
+                    preSnowballExplodeEvent.willSetFire(),
+                    preSnowballExplodeEvent.willBreakBlocks()
+            );
+        }
     }
 }
