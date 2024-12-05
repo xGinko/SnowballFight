@@ -3,6 +3,7 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.XMaterial;
 import me.xginko.snowballfight.SnowballFight;
+import me.xginko.snowballfight.utils.SnowHelper;
 import me.xginko.snowballfight.utils.Util;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -27,7 +28,6 @@ public class SnowOnHit extends SnowballModule implements Listener {
     private static final boolean HAS_SNOW_DATA = Util.hasClass("org.bukkit.block.data.type.Snow");
 
     private final Set<EntityType> configuredTypes;
-    private final double snowPatchRadiusSquared;
     private final int snowPatchRadius;
     private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist, onlyPlayers;
     private boolean powderSnowEnabled;
@@ -39,7 +39,6 @@ public class SnowOnHit extends SnowballModule implements Listener {
                 "If enabled will only work if the snowball was thrown by a player.");
         this.snowPatchRadius = config.getInt(configPath + ".size", 2,
                 "How big the snow patch should be that the snowball leaves as block radius.");
-        this.snowPatchRadiusSquared = snowPatchRadius * snowPatchRadius;
         this.formIce = config.getBoolean(configPath + ".form-ice", true,
                 "Turns water to ice when hit.");
         this.addSnowLayer = config.getBoolean(configPath + ".stack-snow-layer.enable", true,
@@ -132,7 +131,7 @@ public class SnowOnHit extends SnowballModule implements Listener {
                         Block iterativeBlock = world.getBlockAt(x, y, z);
 
                         // Gives us that round shape
-                        if (iterativeBlock.getLocation().distanceSquared(hitLoc) >= snowPatchRadiusSquared) continue;
+                        if (iterativeBlock.getLocation().distance(hitLoc) >= snowPatchRadius) continue;
 
                         Material iterativeType = iterativeBlock.getType();
 
@@ -143,23 +142,8 @@ public class SnowOnHit extends SnowballModule implements Listener {
                             continue;
                         }
 
-                        if (addSnowLayer && HAS_SNOW_DATA && iterativeType == XMaterial.SNOW.parseMaterial()) {
-                            org.bukkit.block.data.type.Snow snowData = (org.bukkit.block.data.type.Snow) iterativeBlock.getBlockData();
-                            final int layers = snowData.getLayers();
-                            if (replaceFullLayer) {
-                                if (layers < snowData.getMaximumLayers() - 1) {
-                                    snowData.setLayers(layers + 1);
-                                    iterativeBlock.setBlockData(snowData);
-                                } else {
-                                    // If only one or no more layers left to add, turn into snow block.
-                                    iterativeBlock.setType(powderSnowEnabled ? XMaterial.POWDER_SNOW.parseMaterial() : XMaterial.SNOW_BLOCK.parseMaterial(), true);
-                                }
-                            } else {
-                                if (layers < snowData.getMaximumLayers()) {
-                                    snowData.setLayers(layers + 1);
-                                    iterativeBlock.setBlockData(snowData);
-                                }
-                            }
+                        if (HAS_SNOW_DATA && addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
+                            SnowHelper.increaseSnowLayer(iterativeBlock, replaceFullLayer, powderSnowEnabled);
                             continue;
                         }
 

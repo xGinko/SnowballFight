@@ -168,7 +168,9 @@ public class FireworkOnHit extends SnowballModule implements Listener {
                 .trail(trail)
                 .build());
         firework.setFireworkMeta(meta);
-        if (CAN_SET_SHOOTER) firework.setShooter(snowball.getShooter()); // Copy over shooter for damage tracking
+        if (CAN_SET_SHOOTER) {
+            firework.setShooter(snowball.getShooter()); // Copy over shooter for damage tracking
+        }
         firework.detonate();
     }
 

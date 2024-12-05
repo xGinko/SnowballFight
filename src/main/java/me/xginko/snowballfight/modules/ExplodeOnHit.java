@@ -87,7 +87,7 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
         PreSnowballExplodeEvent preSnowballExplodeEvent = new PreSnowballExplodeEvent(
                 (Snowball) event.getEntity(),
                 event.getHitEntity(),
-                event.getHitBlock() != null ? Util.toCenterLocation(event.getHitBlock().getLocation()) : event.getEntity().getLocation(),
+                event.getEntity().getLocation(),
                 explosionPower,
                 explosionSetFire,
                 explosionBreakBlocks,

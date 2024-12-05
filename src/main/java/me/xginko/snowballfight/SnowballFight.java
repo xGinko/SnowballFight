@@ -80,7 +80,7 @@ public final class SnowballFight extends JavaPlugin {
         try {
             disableRunningTasks();
             config = new SnowballConfig();
-            snowballs = new SnowballTracker(instance, config.snowballCacheDuration);
+            snowballs = new SnowballTracker(config.snowballCacheDuration);
             SnowballModule.reloadModules();
             config.saveConfig();
         } catch (Throwable e) {

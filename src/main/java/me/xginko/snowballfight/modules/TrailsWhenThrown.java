@@ -106,6 +106,7 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
 
             try {
                 spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getPrimaryColor(), amount);
+                spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getSecondaryColor(), amount);
             } catch (Throwable t) {
                 particleTasks.remove(wrappedSnowball.snowball.getUniqueId()).cancel();
                 SnowballFight.logger().warn("Trail task ended with an exception - {}", t.getLocalizedMessage());
