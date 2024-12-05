@@ -5,7 +5,6 @@ import me.xginko.snowballfight.SnowballFight;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -72,21 +71,19 @@ public class KnockbackOnHit extends SnowballModule implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
-        final Entity hitEntity = event.getHitEntity();
-        if (hitEntity == null) return;
-        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
-
-        final Projectile snowball = event.getEntity();
-        if (onlyPlayers && !(snowball.getShooter() instanceof Player)) return;
+        if (event.getHitEntity() == null) return;
+        if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(event.getHitEntity().getType()))) return;
+        if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
         if (SnowballFight.isServerFolia()) {
-            SnowballFight.scheduling().entitySpecificScheduler(hitEntity).run(() -> {
-                if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
-                else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));
-            }, null);
+            SnowballFight.scheduling().entitySpecificScheduler(event.getHitEntity())
+                    .run(() -> doKnockback(event.getHitEntity(), event.getEntity().getVelocity()), null);
         } else {
-            if (modifyVector) hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier).add(vectorModifier));
-            else hitEntity.setVelocity(snowball.getVelocity().multiply(multiplier));
+            doKnockback(event.getHitEntity(), event.getEntity().getVelocity());
         }
+    }
+
+    private void doKnockback(Entity hitEntity, Vector snowballVelo) {
+        hitEntity.setVelocity(modifyVector ? snowballVelo.multiply(multiplier).add(vectorModifier) : snowballVelo.multiply(multiplier));
     }
 }
