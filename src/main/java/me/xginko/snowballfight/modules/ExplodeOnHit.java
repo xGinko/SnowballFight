@@ -3,6 +3,7 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.events.PostSnowballExplodeEvent;
 import me.xginko.snowballfight.events.PreSnowballExplodeEvent;
+import me.xginko.snowballfight.utils.Util;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -92,7 +93,17 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
                 event.isAsynchronous()
         );
 
-        if (!preSnowballExplodeEvent.callEvent()) return;
+        if (Util.isChunkUnsafe(
+                preSnowballExplodeEvent.getExplodeLocation().getBlockX() >> 4,
+                preSnowballExplodeEvent.getExplodeLocation().getBlockZ() >> 4)) {
+            preSnowballExplodeEvent.setCancelled(true);
+        }
+
+        plugin.getServer().getPluginManager().callEvent(preSnowballExplodeEvent);
+
+        if (preSnowballExplodeEvent.isCancelled()) {
+            return;
+        }
 
         PostSnowballExplodeEvent postSnowballExplodeEvent = new PostSnowballExplodeEvent(
                 preSnowballExplodeEvent.getSnowball(),

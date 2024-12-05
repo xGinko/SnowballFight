@@ -46,6 +46,11 @@ public final class Util {
         SnowballFight.audiences().sender(sender).sendMessage(message);
     }
 
+    // If any chunk coord is outside 30 million blocks, paper will warn about dangerous chunk retrieval
+    public static boolean isChunkUnsafe(int chunkX, int chunkZ) {
+        return chunkX > 1875000 || chunkZ > 1875000 || chunkX < -1875000 || chunkZ < -1875000;
+    }
+
     public static @NotNull Color colorFromHexString(String hexString) throws NumberFormatException {
         return Color.fromRGB(Integer.parseInt(hexString.replace("#", ""), 16));
     }

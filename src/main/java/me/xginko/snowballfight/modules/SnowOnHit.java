@@ -9,8 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.type.Snow; // Doesn't exist in 1.12
-import org.bukkit.entity.Entity;
+import org.bukkit.block.data.type.Snow;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
 public class SnowOnHit extends SnowballModule implements Listener {
 
     private final Set<EntityType> configuredTypes;
+    private final double snowPatchRadiusSquared;
     private final int snowPatchRadius;
     private final boolean formIce, addSnowLayer, replaceFullLayer, onlyForEntities, onlyForSpecificEntities, asBlacklist, onlyPlayers;
     private boolean powderSnowEnabled;
@@ -39,6 +39,7 @@ public class SnowOnHit extends SnowballModule implements Listener {
                 "If enabled will only work if the snowball was thrown by a player.");
         this.snowPatchRadius = config.getInt(configPath + ".size", 2,
                 "How big the snow patch should be that the snowball leaves as block radius.");
+        this.snowPatchRadiusSquared = snowPatchRadius * snowPatchRadius;
         this.formIce = config.getBoolean(configPath + ".form-ice", true,
                 "Turns water to ice when hit.");
         this.addSnowLayer = config.getBoolean(configPath + ".stack-snow-layer.enable", true,
@@ -90,28 +91,34 @@ public class SnowOnHit extends SnowballModule implements Listener {
     private void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntityType() != XEntityType.SNOWBALL.get()) return;
 
-        final Entity hitEntity = event.getHitEntity();
         if (onlyForEntities) {
-            if (hitEntity == null) return;
-            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(hitEntity.getType()))) return;
+            if (event.getHitEntity() == null) return;
+            if (onlyForSpecificEntities && (asBlacklist == configuredTypes.contains(event.getHitEntity().getType()))) return;
         }
 
         if (onlyPlayers && !(event.getEntity().getShooter() instanceof Player)) return;
 
-        final Block hitBlock = event.getHitBlock();
-        if (hitBlock != null) {
-            coverWithSnowAt(hitBlock);
+        if (event.getHitBlock() != null) {
+            coverWithSnowAt(event.getHitBlock());
             return;
         }
 
-        if (hitEntity != null) {
-            coverWithSnowAt(hitEntity.getLocation().getBlock());
+        if (event.getHitEntity() != null) {
+            coverWithSnowAt(event.getHitEntity().getLocation().getBlock());
         }
     }
 
     private void coverWithSnowAt(Block startBlock) {
         final Location hitLoc = startBlock.getLocation().toCenterLocation();
-        SnowballFight.scheduling().regionSpecificScheduler(hitLoc).runDelayed(() -> {
+
+        final int chunkX = hitLoc.getBlockX() >> 4;
+        final int chunkZ = hitLoc.getBlockZ() >> 4;
+
+        if (Util.isChunkUnsafe(chunkX, chunkZ)) { // Ignore if chunk way out of bounds
+            return;
+        }
+
+        SnowballFight.scheduling().regionSpecificScheduler(startBlock.getWorld(), chunkX, chunkZ).runDelayed(() -> {
             World world = hitLoc.getWorld();
             int centerX = hitLoc.getBlockX();
             int centerY = hitLoc.getBlockY();
@@ -124,8 +131,8 @@ public class SnowOnHit extends SnowballModule implements Listener {
 
                         Block iterativeBlock = world.getBlockAt(x, y, z);
 
-                        // Gives us that nice round shape
-                        if (iterativeBlock.getLocation().distance(hitLoc) >= snowPatchRadius) continue;
+                        // Gives us that round shape
+                        if (iterativeBlock.getLocation().distanceSquared(hitLoc) >= snowPatchRadiusSquared) continue;
 
                         Material iterativeType = iterativeBlock.getType();
 
