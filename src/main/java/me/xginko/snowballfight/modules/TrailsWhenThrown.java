@@ -3,7 +3,7 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.WrappedSnowball;
-import me.xginko.snowballfight.utils.ParticleTool;
+import me.xginko.snowballfight.utils.ParticleHelper;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -104,8 +104,8 @@ public class TrailsWhenThrown extends SnowballModule implements Listener {
             }
 
             try {
-                ParticleTool.spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getPrimaryColor(), amount, size);
-                ParticleTool.spawnTrailParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getSecondaryColor(), amount, size);
+                ParticleHelper.spawnDustParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getPrimaryColor(), amount, size);
+                ParticleHelper.spawnDustParticle(wrappedSnowball.snowball.getLocation(), wrappedSnowball.getSecondaryColor(), amount, size);
             } catch (Throwable t) {
                 particleTasks.remove(wrappedSnowball.snowball.getUniqueId()).cancel();
                 SnowballFight.logger().warn("Trail task ended with an exception - {}", t.getLocalizedMessage());

@@ -3,7 +3,7 @@ package me.xginko.snowballfight.modules;
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.XMaterial;
 import me.xginko.snowballfight.SnowballFight;
-import me.xginko.snowballfight.utils.SnowTool;
+import me.xginko.snowballfight.utils.SnowLayerHelper;
 import me.xginko.snowballfight.utils.Util;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -141,8 +141,8 @@ public class SnowOnHit extends SnowballModule implements Listener {
                             continue;
                         }
 
-                        if (SnowTool.CAN_MODIFY_SNOW && addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
-                            SnowTool.increaseSnowLayer(iterativeBlock, replaceFullLayer, powderSnowEnabled);
+                        if (SnowLayerHelper.CAN_MODIFY_SNOW && addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
+                            SnowLayerHelper.addLayer(iterativeBlock, replaceFullLayer, powderSnowEnabled);
                             continue;
                         }
 

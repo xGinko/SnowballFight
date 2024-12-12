@@ -6,7 +6,7 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 
-public class ParticleTool {
+public class ParticleHelper {
 
     private static final boolean HAS_PARTICLE_BUILDER, HAS_DUST_OPTIONS;
 
@@ -15,7 +15,8 @@ public class ParticleTool {
         HAS_DUST_OPTIONS = Util.hasClass("org.bukkit.Particle$DustOptions");
     }
 
-    public static void spawnTrailParticle(Location location, Color color, int amount, float size) {
+    public static void spawnDustParticle(Location location, Color color, int amount, float size) {
+        // Paper
         if (HAS_PARTICLE_BUILDER) {
             ParticleBuilder builder = new ParticleBuilder(XParticle.DUST.get())
                     .location(location)
@@ -25,7 +26,7 @@ public class ParticleTool {
             return;
         }
 
-        // spigot 1.13+
+        // Spigot 1.13+
         if (HAS_DUST_OPTIONS) {
             location.getWorld().spawnParticle(
                     XParticle.DUST.get(),
@@ -38,7 +39,10 @@ public class ParticleTool {
             return;
         }
 
-        // spigot 1.12
+        // Spigot 1.12 - recreated from ParticleBuilder methods on Paper 1.12 but doesn't work as intended.
+        // Particles are randomly dispersed instead of spawned on a straight line and are also randomly colored.
+        // And yes, this also happens when using ParticleBuilder, so yeah.
+        // Not researching this further as I have no interest in supporting legacy versions but left in for people that care.
         location.getWorld().spawnParticle(
                 XParticle.DUST.get(),
                 location,
