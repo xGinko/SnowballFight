@@ -90,13 +90,12 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
                 event.getEntity().getLocation(),
                 explosionPower,
                 explosionSetFire,
-                explosionBreakBlocks,
-                event.isAsynchronous()
+                explosionBreakBlocks
         );
 
         if (Util.isChunkUnsafe(
-                preSnowballExplodeEvent.getExplodeLocation().getBlockX() >> 4,
-                preSnowballExplodeEvent.getExplodeLocation().getBlockZ() >> 4)) {
+                preSnowballExplodeEvent.getLocation().getBlockX() >> 4,
+                preSnowballExplodeEvent.getLocation().getBlockZ() >> 4)) {
             preSnowballExplodeEvent.setCancelled(true);
         }
 
@@ -109,12 +108,11 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
         PostSnowballExplodeEvent postSnowballExplodeEvent = new PostSnowballExplodeEvent(
                 preSnowballExplodeEvent.getSnowball(),
                 preSnowballExplodeEvent.getHitEntity(),
-                preSnowballExplodeEvent.getExplodeLocation(),
-                preSnowballExplodeEvent.getExplosionPower(),
-                preSnowballExplodeEvent.willSetFire(),
-                preSnowballExplodeEvent.willBreakBlocks(),
-                createExplosion(preSnowballExplodeEvent),
-                event.isAsynchronous()
+                preSnowballExplodeEvent.getLocation(),
+                preSnowballExplodeEvent.getPower(),
+                preSnowballExplodeEvent.getFire(),
+                preSnowballExplodeEvent.getBreakBlocks(),
+                createExplosion(preSnowballExplodeEvent)
         );
 
         plugin.getServer().getPluginManager().callEvent(postSnowballExplodeEvent);
@@ -122,21 +120,21 @@ public class ExplodeOnHit extends SnowballModule implements Listener {
 
     private boolean createExplosion(PreSnowballExplodeEvent preSnowballExplodeEvent) {
         if (SnowballFight.isServerPaper()) {
-            return preSnowballExplodeEvent.getExplodeLocation().getWorld().createExplosion(
+            return preSnowballExplodeEvent.getLocation().getWorld().createExplosion(
                     // Set explode source for damage tracking without getting blocked by the MOB_GRIEFING gamerule
                     preSnowballExplodeEvent.getSnowball().getShooter() instanceof LivingEntity ?
                             (LivingEntity) preSnowballExplodeEvent.getSnowball().getShooter() : preSnowballExplodeEvent.getSnowball(),
-                    preSnowballExplodeEvent.getExplodeLocation(),
-                    preSnowballExplodeEvent.getExplosionPower(),
-                    preSnowballExplodeEvent.willSetFire(),
-                    preSnowballExplodeEvent.willBreakBlocks()
+                    preSnowballExplodeEvent.getLocation(),
+                    preSnowballExplodeEvent.getPower(),
+                    preSnowballExplodeEvent.getFire(),
+                    preSnowballExplodeEvent.getBreakBlocks()
             );
         } else {
-            return preSnowballExplodeEvent.getExplodeLocation().getWorld().createExplosion(
-                    preSnowballExplodeEvent.getExplodeLocation(),
-                    preSnowballExplodeEvent.getExplosionPower(),
-                    preSnowballExplodeEvent.willSetFire(),
-                    preSnowballExplodeEvent.willBreakBlocks()
+            return preSnowballExplodeEvent.getLocation().getWorld().createExplosion(
+                    preSnowballExplodeEvent.getLocation(),
+                    preSnowballExplodeEvent.getPower(),
+                    preSnowballExplodeEvent.getFire(),
+                    preSnowballExplodeEvent.getBreakBlocks()
             );
         }
     }
