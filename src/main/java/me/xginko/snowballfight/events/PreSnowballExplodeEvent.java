@@ -50,14 +50,12 @@ public class PreSnowballExplodeEvent extends SnowballExplodeEvent implements Can
         return isCancelled;
     }
 
-    @NotNull
     @Override
-    public HandlerList getHandlers() {
+    public @NotNull HandlerList getHandlers() {
         return handlers;
     }
 
-    @NotNull
-    public static HandlerList getHandlerList() {
+    public static @NotNull HandlerList getHandlerList() {
         return handlers;
     }
 }
