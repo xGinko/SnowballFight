@@ -2,12 +2,8 @@ package me.xginko.snowballfight.modules;
 
 import com.cryptomorin.xseries.XEntityType;
 import com.cryptomorin.xseries.XMaterial;
-import me.xginko.snowballfight.SnowballFight;
 import me.xginko.snowballfight.utils.SnowLayerHelper;
 import me.xginko.snowballfight.utils.Util;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
@@ -36,7 +32,7 @@ public class SnowOnHit extends SnowballModule implements Listener {
                 "\nCovers the hit block in snow.");
         this.onlyPlayers = config.getBoolean(configPath + ".only-thrown-by-player", true,
                 "If enabled will only work if the snowball was thrown by a player.");
-        this.snowPatchRadius = config.getInt(configPath + ".size", 2,
+        this.snowPatchRadius = config.getInt(configPath + ".size", 3,
                 "How big the snow patch should be that the snowball leaves as block radius.");
         this.formIce = config.getBoolean(configPath + ".form-ice", true,
                 "Turns water to ice when hit.");
@@ -98,60 +94,59 @@ public class SnowOnHit extends SnowballModule implements Listener {
 
         if (event.getHitBlock() != null) {
             coverWithSnowAt(event.getHitBlock());
-            return;
         }
 
-        if (event.getHitEntity() != null) {
+        else if (event.getHitEntity() != null) {
             coverWithSnowAt(event.getHitEntity().getLocation().getBlock());
         }
     }
 
-    private void coverWithSnowAt(Block startBlock) {
-        final Location hitLoc = Util.toCenterLocation(startBlock.getLocation());
-
-        final int chunkX = hitLoc.getBlockX() >> 4;
-        final int chunkZ = hitLoc.getBlockZ() >> 4;
+    private void coverWithSnowAt(Block centerBlock) {
+        final int chunkX = centerBlock.getX() >> 4;
+        final int chunkZ = centerBlock.getZ() >> 4;
 
         if (Util.isChunkUnsafe(chunkX, chunkZ)) { // Ignore if chunk way out of bounds
             return;
         }
 
-        SnowballFight.scheduling().regionSpecificScheduler(startBlock.getWorld(), chunkX, chunkZ).runDelayed(() -> {
-            World world = hitLoc.getWorld();
-            int centerX = hitLoc.getBlockX();
-            int centerY = hitLoc.getBlockY();
-            int centerZ = hitLoc.getBlockZ();
+        scheduling.regionSpecificScheduler(centerBlock.getWorld(), chunkX, chunkZ).runDelayed(() -> {
+            if (snowPatchRadius == 1) {
+                setSnowOrIce(centerBlock.getRelative(BlockFace.UP));
+                return;
+            }
 
-            for (int x = centerX - snowPatchRadius; x <= centerX + snowPatchRadius; x++) {
-                for (int z = centerZ - snowPatchRadius; z <= centerZ + snowPatchRadius; z++) {
-                    for (int y = Math.max(Util.getMinWorldHeight(world), centerY - snowPatchRadius); y <= centerY + snowPatchRadius; y++) {
-                        if (y > world.getMaxHeight()) break;
+            for (int x = centerBlock.getX() - snowPatchRadius; x <= centerBlock.getX() + snowPatchRadius; x++) {
+                for (int z = centerBlock.getZ() - snowPatchRadius; z <= centerBlock.getZ() + snowPatchRadius; z++) {
+                    for (int y = Math.max(Util.getMinWorldHeight(centerBlock.getWorld()), centerBlock.getY() - snowPatchRadius); y <= centerBlock.getY() + snowPatchRadius; y++) {
+                        if (y > centerBlock.getWorld().getMaxHeight()) break;
 
-                        Block iterativeBlock = world.getBlockAt(x, y, z);
-
-                        // Gives us that round shape
-                        if (iterativeBlock.getLocation().distance(hitLoc) >= snowPatchRadius) continue;
-
-                        Material iterativeType = iterativeBlock.getType();
-
-                        if (iterativeType == XMaterial.AIR.parseMaterial() || iterativeType == XMaterial.CAVE_AIR.parseMaterial()) {
-                            if (iterativeBlock.getRelative(BlockFace.DOWN).getType().isSolid()) {
-                                iterativeBlock.setType(XMaterial.SNOW.parseMaterial(), true);
-                            }
-                            continue;
-                        }
-
-                        if (SnowLayerHelper.CAN_MODIFY_SNOW && addSnowLayer && iterativeType == XMaterial.SNOW.parseMaterial()) {
-                            SnowLayerHelper.addLayer(iterativeBlock, replaceFullLayer, powderSnowEnabled);
-                            continue;
-                        }
-
-                        if (formIce && iterativeType == XMaterial.WATER.parseMaterial()) {
-                            iterativeBlock.setType(XMaterial.ICE.parseMaterial(), true);
+                        if (Util.square(
+                                centerBlock.getX() - x,
+                                centerBlock.getY() - y,
+                                centerBlock.getZ() - z) < Util.square(snowPatchRadius) - (snowPatchRadius == 2 ? 1 : 3)) {
+                            setSnowOrIce(centerBlock.getWorld().getBlockAt(x, y, z));
                         }
                     }
                 }
             }
         }, 1L);
+    }
+
+    private void setSnowOrIce(final Block block) {
+        if (block.getType() == XMaterial.AIR.parseMaterial() || block.getType() == XMaterial.CAVE_AIR.parseMaterial()) {
+            if (block.getRelative(BlockFace.DOWN).getType().isSolid()) {
+                block.setType(XMaterial.SNOW.parseMaterial(), true);
+            }
+            return;
+        }
+
+        if (SnowLayerHelper.CAN_MODIFY_SNOW && addSnowLayer && block.getType() == XMaterial.SNOW.parseMaterial()) {
+            SnowLayerHelper.addLayer(block, replaceFullLayer, powderSnowEnabled);
+            return;
+        }
+
+        if (formIce && block.getType() == XMaterial.WATER.parseMaterial()) {
+            block.setType(XMaterial.ICE.parseMaterial(), true);
+        }
     }
 }

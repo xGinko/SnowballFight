@@ -64,6 +64,14 @@ public final class Util {
         return Color.fromRGB(Integer.parseInt(hexString.replace("#", ""), 16));
     }
 
+    public static double square(double d) {
+        return d * d;
+    }
+
+    public static double square(double x, double y, double z) {
+        return square(x) + square(y) + square(z);
+    }
+
     public static boolean hasClass(String className) {
         try {
             Class.forName(className);
