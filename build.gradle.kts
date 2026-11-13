@@ -1,7 +1,6 @@
 plugins {
     java
     id("com.gradleup.shadow") version ("8.3.2")
-    id("io.papermc.paperweight.userdev") version ("1.7.4")
     id("xyz.wagyourtail.jvmdowngrader") version ("1.2.0")
 }
 
@@ -12,7 +11,7 @@ description = "Make snowball fights fun and engaging."
 repositories {
     mavenCentral()
 
-    maven("https://ci.pluginwiki.us/plugin/repository/everything/") {
+    maven("https://repo.bsdevelopment.org/releases/") {
         name = "configmaster-repo"
     }
 
@@ -34,7 +33,7 @@ repositories {
 }
 
 dependencies {
-    paperweight.foliaDevBundle("1.20.6-R0.1-SNAPSHOT");
+    compileOnly("dev.folia:folia-api:1.20.6-R0.1-SNAPSHOT")
     compileOnly("org.apache.logging.log4j:log4j-core:2.23.1")
 
     implementation("com.github.thatsmusic99:ConfigurationMaster-API:v2.0.0-rc.1")
@@ -42,14 +41,14 @@ dependencies {
     implementation("org.reflections:reflections:0.10.2")
 
     implementation("space.arim.morepaperlib:morepaperlib:0.4.3")
-    implementation("com.github.cryptomorin:XSeries:11.3.0")
-    implementation("org.bstats:bstats-bukkit:3.0.2")
+    implementation("com.github.cryptomorin:XSeries:14.0.0")
+    implementation("org.bstats:bstats-bukkit:3.2.1")
 
-    implementation("net.kyori:adventure-api:4.17.0")
-    implementation("net.kyori:adventure-text-serializer-ansi:4.17.0")
-    implementation("net.kyori:adventure-text-logger-slf4j:4.17.0")
-    implementation("net.kyori:adventure-text-minimessage:4.17.0")
-    implementation("net.kyori:adventure-platform-bukkit:4.3.4")
+    implementation("net.kyori:adventure-api:4.21.0")
+    implementation("net.kyori:adventure-text-serializer-ansi:4.21.0")
+    implementation("net.kyori:adventure-text-logger-slf4j:4.21.0")
+    implementation("net.kyori:adventure-text-minimessage:4.21.0")
+    implementation("net.kyori:adventure-platform-bukkit:4.4.1")
 }
 
 java {
@@ -74,7 +73,7 @@ tasks {
     shadowJar {
         archiveFileName.set("SnowballFight-${version}.jar")
         relocate("io.github.thatsmusic99.configurationmaster", "me.xginko.snowballfight.libs.configmaster")
-        relocate("com.github.cryptomorin.xseries", "me.xginko.snowballfight.libs.xseries")
+        relocate("com.cryptomorin.xseries", "me.xginko.snowballfight.libs.xseries")
         exclude(
             "com/cryptomorin/xseries/XBiome*",
             "com/cryptomorin/xseries/NMSExtras*",
@@ -102,6 +101,7 @@ tasks {
     }
 
     jar {
+        archiveClassifier.set("dev") // ponytail: was set implicitly by paperweight, keeps jar from overwriting shadowJar output
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         dependsOn(shadowJar.get())
         from(zipTree(shadowJar.get().archiveFile))
